@@ -3,7 +3,8 @@
   "package": "com.spawnhunt.mixin",
   "compatibilityLevel": "JAVA_21",
   "client": [
-    "TitleScreenMixin"
+    "TitleScreenMixin",
+    "CreateWorldScreenMixin"
   ],
   "injectors": {
     "defaultRequire": 1

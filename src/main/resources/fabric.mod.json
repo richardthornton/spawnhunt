@@ -13,6 +13,7 @@
       "com.spawnhunt.SpawnHuntMod"
     ]
   },
+  "accessWidener": "spawnhunt.accesswidener",
   "mixins": [
     "spawnhunt.mixins.json"
   ],

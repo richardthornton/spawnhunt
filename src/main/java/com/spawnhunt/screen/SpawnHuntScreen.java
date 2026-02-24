@@ -6,6 +6,7 @@ import net.minecraft.block.Block;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.TitleScreen;
+import net.minecraft.client.gui.screen.world.CreateWorldScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
@@ -51,11 +52,13 @@ public class SpawnHuntScreen extends Screen {
                 .build()
         );
 
-        // Start button — sets hunt target, world creation in Phase 5
+        // Start button — sets hunt target, opens world creation
         this.addDrawableChild(
                 ButtonWidget.builder(Text.literal("Start"), button -> {
                     HuntState.startHunt(Registries.BLOCK.getId(targetBlock));
-                    // TODO Phase 5: trigger world creation
+                    CreateWorldScreen.show(this.client, () -> {
+                        this.client.setScreen(new TitleScreen());
+                    });
                 })
                 .dimensions(this.width / 2 + 58, buttonY, 96, 20)
                 .build()
