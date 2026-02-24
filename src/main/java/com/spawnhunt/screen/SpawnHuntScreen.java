@@ -73,24 +73,32 @@ public class SpawnHuntScreen extends Screen {
         super.render(context, mouseX, mouseY, delta);
 
         int centerX = this.width / 2;
-        int iconY = this.height / 2 - ICON_SIZE + 10;
-        int nameY = iconY + ICON_SIZE + 8;
+
+        // Bobbing animation for the block icon
+        float bob = (float) Math.sin(System.currentTimeMillis() / 500.0) * 3.0f;
+        int iconY = (int) (this.height / 2 - ICON_SIZE + 10 + bob);
+        int nameY = this.height / 2 + 10 + 8 + 4; // fixed position, below icon range
 
         // Title
         Text title = Text.literal("SpawnHunt");
         context.drawText(this.textRenderer, title,
                 centerX - this.textRenderer.getWidth(title) / 2, 20, 0xFFFFFFFF, true);
 
-        // Translated block name below the icon
-        Text blockName = targetBlock.getName();
-        context.drawText(this.textRenderer, blockName,
-                centerX - this.textRenderer.getWidth(blockName) / 2, nameY, 0xFFFFFF00, true);
+        // Subtitle
+        Text subtitle = Text.literal("Your target:");
+        context.drawText(this.textRenderer, subtitle,
+                centerX - this.textRenderer.getWidth(subtitle) / 2, 34, 0xFFAAAAAA, true);
 
-        // Block icon at 4x scale, centered
+        // Block icon at 4x scale, centered, with bobbing
         context.getMatrices().pushMatrix();
         context.getMatrices().translate((float) (centerX - ICON_SIZE / 2), (float) iconY);
         context.getMatrices().scale((float) ICON_SCALE, (float) ICON_SCALE);
         context.drawItem(new ItemStack(targetBlock.asItem()), 0, 0);
         context.getMatrices().popMatrix();
+
+        // Translated block name below the icon (fixed position)
+        Text blockName = targetBlock.getName();
+        context.drawText(this.textRenderer, blockName,
+                centerX - this.textRenderer.getWidth(blockName) / 2, nameY, 0xFFFFFF00, true);
     }
 }
