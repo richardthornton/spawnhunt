@@ -3,12 +3,14 @@ package com.spawnhunt;
 import com.spawnhunt.data.BlockPool;
 import com.spawnhunt.data.HuntState;
 import com.spawnhunt.event.InventoryListener;
+import com.spawnhunt.event.WorldLifecycleHandler;
 import com.spawnhunt.hud.HuntHudRenderer;
 import com.spawnhunt.screen.VictoryOverlay;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.minecraft.client.gui.screen.DeathScreen;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,10 +36,14 @@ public class SpawnHuntMod implements ClientModInitializer {
         // Tick the timer and check inventory each client tick
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (HuntState.isActive() && !HuntState.isWon() && client.player != null) {
-                HuntState.tick(client.isPaused());
+                boolean paused = client.isPaused() || client.currentScreen instanceof DeathScreen;
+                HuntState.tick(paused);
                 InventoryListener.tick(client);
             }
         });
+
+        // Reset hunt state when disconnecting from a world
+        WorldLifecycleHandler.register();
 
         // Render the HUD overlay (target block + timer + victory)
         HudRenderCallback.EVENT.register(HuntHudRenderer::render);
