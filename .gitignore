@@ -24,3 +24,5 @@ Desktop.ini
 
 # Misc
 *.log
+
+.claude/
