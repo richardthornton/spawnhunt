@@ -58,9 +58,9 @@ JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-21.0.10.7-hotspot" ./gradlew bu
 - [x] 2.3 Test & validate pool (log contents at startup, manual review)
 
 ### Phase 3 — Main Menu Integration
-- [ ] 3.1 Create `TitleScreenMixin` (@Inject into TitleScreen.init(), add "SpawnHunt" button)
-- [ ] 3.2 Position button (below existing menu buttons, avoid overlap)
-- [ ] 3.3 Wire button to open `SpawnHuntScreen`
+- [x] 3.1 Create `TitleScreenMixin` (@Inject into TitleScreen.init(), add "SpawnHunt" button)
+- [x] 3.2 Position button (below existing menu buttons, avoid overlap)
+- [x] 3.3 Wire button to open `SpawnHuntScreen`
 
 ### Phase 4 — Block Selection Screen
 - [ ] 4.1 Create `SpawnHuntScreen` (extends Screen, layout with block icon + name + buttons)

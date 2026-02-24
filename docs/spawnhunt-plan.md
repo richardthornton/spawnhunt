@@ -116,13 +116,13 @@ Pool is computed once at mod init and cached.
 | 2.2 | Add random selection method | ✅ Done | `getRandomBlock(Random)` — uniform pick from cached pool. |
 | 2.3 | Test & validate pool | ✅ Done | `logPool()` called at startup — logs every block at DEBUG, pool size at INFO. Manual review pending first in-game test. |
 
-### Phase 3 — Main Menu Integration
+### Phase 3 — Main Menu Integration ✅
 
-| # | Task | Detail |
-|---|---|---|
-| 3.1 | Create `TitleScreenMixin` | Use `@Inject` into `TitleScreen.init()` to add a new `ButtonWidget` labelled **"SpawnHunt"**. |
-| 3.2 | Position the button | Place it below the existing menu buttons (or alongside Realms button). Adjust Y-offsets to avoid overlap. |
-| 3.3 | Wire button to open `SpawnHuntScreen` | On click → `MinecraftClient.getInstance().setScreen(new SpawnHuntScreen())`. |
+| # | Task | Status | Detail |
+|---|---|---|---|
+| 3.1 | Create `TitleScreenMixin` | ✅ Done | `@Inject` at TAIL of `TitleScreen.init()`. Extends Screen for access to `addDrawableChild`. |
+| 3.2 | Position the button | ✅ Done | Centered, at `height/4 + 132` — below existing menu buttons. Standard 200x20 size. |
+| 3.3 | Wire button to open `SpawnHuntScreen` | ✅ Done | Opens `SpawnHuntScreen` with random block, Reroll/Cancel/Start buttons (Start is placeholder for Phase 5). |
 
 ### Phase 4 — Block Selection Screen
 
