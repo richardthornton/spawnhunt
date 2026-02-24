@@ -64,25 +64,30 @@ public class SpawnHuntScreen extends Screen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        // Dark background
+        context.fill(0, 0, this.width, this.height, 0xC0000000);
+
         super.render(context, mouseX, mouseY, delta);
 
-        // Title
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("SpawnHunt"),
-                this.width / 2, 20, 0xFFFFFF);
-
-        // Block icon at 4x scale, centered
-        int iconX = this.width / 2 - ICON_SIZE / 2;
+        int centerX = this.width / 2;
         int iconY = this.height / 2 - ICON_SIZE + 10;
+        int nameY = iconY + ICON_SIZE + 8;
 
-        context.getMatrices().pushMatrix();
-        context.getMatrices().translate((float) iconX, (float) iconY);
-        context.getMatrices().scale((float) ICON_SCALE, (float) ICON_SCALE);
-        context.drawItem(new ItemStack(targetBlock.asItem()), 0, 0);
-        context.getMatrices().popMatrix();
+        // Title
+        Text title = Text.literal("SpawnHunt");
+        context.drawText(this.textRenderer, title,
+                centerX - this.textRenderer.getWidth(title) / 2, 20, 0xFFFFFFFF, true);
 
         // Translated block name below the icon
         Text blockName = targetBlock.getName();
-        context.drawCenteredTextWithShadow(this.textRenderer, blockName,
-                this.width / 2, iconY + ICON_SIZE + 8, 0xFFFF00);
+        context.drawText(this.textRenderer, blockName,
+                centerX - this.textRenderer.getWidth(blockName) / 2, nameY, 0xFFFFFF00, true);
+
+        // Block icon at 4x scale, centered
+        context.getMatrices().pushMatrix();
+        context.getMatrices().translate((float) (centerX - ICON_SIZE / 2), (float) iconY);
+        context.getMatrices().scale((float) ICON_SCALE, (float) ICON_SCALE);
+        context.drawItem(new ItemStack(targetBlock.asItem()), 0, 0);
+        context.getMatrices().popMatrix();
     }
 }

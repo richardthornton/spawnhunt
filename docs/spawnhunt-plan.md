@@ -121,7 +121,7 @@ Pool is computed once at mod init and cached.
 | # | Task | Status | Detail |
 |---|---|---|---|
 | 3.1 | Create `TitleScreenMixin` | ✅ Done | `@Inject` at TAIL of `TitleScreen.init()`. Extends Screen for access to `addDrawableChild`. |
-| 3.2 | Position the button | ✅ Done | Centered, at `height/4 + 132` — below existing menu buttons. Standard 200x20 size. |
+| 3.2 | Position the button | ✅ Done | Centered, at `height/4 + 156` — below Options/Quit row. Standard 200x20 size. Tested in-game. |
 | 3.3 | Wire button to open `SpawnHuntScreen` | ✅ Done | Opens `SpawnHuntScreen` with random block, Reroll/Cancel/Start buttons (Start is placeholder for Phase 5). |
 
 ### Phase 4 — Block Selection Screen ✅
@@ -129,7 +129,7 @@ Pool is computed once at mod init and cached.
 | # | Task | Status | Detail |
 |---|---|---|---|
 | 4.1 | Create `SpawnHuntScreen` (extends `Screen`) | ✅ Done | Centered layout: 4x block icon, translated name, three buttons below. |
-| 4.2 | Render the target block | ✅ Done | `DrawContext.drawItem()` at 4x scale via JOML `Matrix3x2fStack`. Translated block name below icon. |
+| 4.2 | Render the target block | ✅ Done | `DrawContext.drawItem()` at 4x scale via JOML `Matrix3x2fStack`. Translated block name below icon. Uses ARGB colors (alpha required). Dark background overlay. Tested in-game. |
 | 4.3 | Implement **Reroll** button | ✅ Done | Calls `BlockPool.getRandomBlock()`, refreshes display. Unlimited. |
 | 4.4 | Implement **Cancel** button | ✅ Done | Returns to title screen. |
 | 4.5 | Implement **Start** button | ✅ Done | Sets `HuntState.startHunt()` with target block. World creation placeholder for Phase 5. |
