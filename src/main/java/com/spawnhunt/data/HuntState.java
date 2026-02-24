@@ -64,9 +64,9 @@ public class HuntState {
 
     public static String formatTime(long ms) {
         long totalSeconds = ms / 1000;
-        long hours = totalSeconds / 3600;
-        long minutes = (totalSeconds % 3600) / 60;
+        long minutes = totalSeconds / 60;
         long seconds = totalSeconds % 60;
-        return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+        long millis = ms % 1000;
+        return String.format("%02d:%02d.%03d", minutes, seconds, millis);
     }
 }

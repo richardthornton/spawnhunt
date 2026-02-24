@@ -70,6 +70,7 @@ public class BlockPool {
             if (item == Items.AIR) continue;
 
             Identifier blockId = Registries.BLOCK.getId(block);
+            if (!blockId.getNamespace().equals("minecraft")) continue;
             Identifier itemId = Registries.ITEM.getId(item);
 
             if (!itemToBlock.containsKey(item)) {

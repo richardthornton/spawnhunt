@@ -2,7 +2,9 @@ package com.spawnhunt;
 
 import com.spawnhunt.data.BlockPool;
 import com.spawnhunt.data.HuntState;
+import com.spawnhunt.event.InventoryListener;
 import com.spawnhunt.hud.HuntHudRenderer;
+import com.spawnhunt.screen.VictoryOverlay;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
@@ -29,15 +31,17 @@ public class SpawnHuntMod implements ClientModInitializer {
             }
         });
 
-        // Tick the timer each client tick (pause-aware)
+        // Tick the timer and check inventory each client tick
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            if (HuntState.isActive() && !HuntState.isWon()) {
+            if (HuntState.isActive() && !HuntState.isWon() && client.player != null) {
                 HuntState.tick(client.isPaused());
+                InventoryListener.tick(client);
             }
         });
 
-        // Render the HUD overlay (target block + timer)
+        // Render the HUD overlay (target block + timer + victory)
         HudRenderCallback.EVENT.register(HuntHudRenderer::render);
+        HudRenderCallback.EVENT.register(VictoryOverlay::render);
 
         LOGGER.info("SpawnHunt initialized!");
     }
