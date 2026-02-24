@@ -1,5 +1,6 @@
 package com.spawnhunt;
 
+import com.spawnhunt.data.BlockPool;
 import com.spawnhunt.data.HuntState;
 import net.fabricmc.api.ClientModInitializer;
 import org.slf4j.Logger;
@@ -14,6 +15,7 @@ public class SpawnHuntMod implements ClientModInitializer {
         LOGGER.info("SpawnHunt initializing...");
 
         HuntState.reset();
+        BlockPool.logPool();
 
         LOGGER.info("SpawnHunt initialized!");
     }

@@ -108,13 +108,13 @@ Pool is computed once at mod init and cached.
 | 1.2 | Create `SpawnHuntMod` entrypoint | ✅ Done | `ClientModInitializer` with logger. `HuntState` singleton with delta-accumulation timer. |
 | 1.3 | Set up Mixin configuration | ✅ Done | `spawnhunt.mixins.json` wired into `fabric.mod.json`. Placeholder `TitleScreenMixin` ready for Phase 3. |
 
-### Phase 2 — Block Pool
+### Phase 2 — Block Pool ✅
 
-| # | Task | Detail |
-|---|---|---|
-| 2.1 | Implement `BlockPool` class | Iterate block registry, filter by item availability, apply exclusion list. Cache result. |
-| 2.2 | Add random selection method | Simple uniform random pick from the cached pool. |
-| 2.3 | Test & validate pool | Log pool contents at startup. Manually review for any blocks that shouldn't be included or are missing. |
+| # | Task | Status | Detail |
+|---|---|---|---|
+| 2.1 | Implement `BlockPool` class | ✅ Done | Tag-and-filter from registry. Deduplicates by item (handles wall variants). Explicit exclusion set for technical/unobtainable blocks. Cached on first access. |
+| 2.2 | Add random selection method | ✅ Done | `getRandomBlock(Random)` — uniform pick from cached pool. |
+| 2.3 | Test & validate pool | ✅ Done | `logPool()` called at startup — logs every block at DEBUG, pool size at INFO. Manual review pending first in-game test. |
 
 ### Phase 3 — Main Menu Integration
 

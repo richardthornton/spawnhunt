@@ -53,9 +53,9 @@ JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-21.0.10.7-hotspot" ./gradlew bu
 - [x] 1.3 Set up Mixin configuration (spawnhunt.mixins.json, wire into fabric.mod.json)
 
 ### Phase 2 — Block Pool
-- [ ] 2.1 Implement `BlockPool` class (iterate registry, filter by item, apply exclusions, cache)
-- [ ] 2.2 Add random selection method
-- [ ] 2.3 Test & validate pool (log contents at startup, manual review)
+- [x] 2.1 Implement `BlockPool` class (iterate registry, filter by item, apply exclusions, cache)
+- [x] 2.2 Add random selection method
+- [x] 2.3 Test & validate pool (log contents at startup, manual review)
 
 ### Phase 3 — Main Menu Integration
 - [ ] 3.1 Create `TitleScreenMixin` (@Inject into TitleScreen.init(), add "SpawnHunt" button)
