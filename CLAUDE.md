@@ -26,7 +26,8 @@ com.spawnhunt
 │   ├── InventoryListener.java     // Detects target block entering inventory
 │   └── WorldLifecycleHandler.java // Resets hunt state on world exit
 └── mixin/
-    └── TitleScreenMixin.java      // Injects "SpawnHunt" button into main menu
+    ├── TitleScreenMixin.java      // Injects "SpawnHunt" button into main menu
+    └── CreateWorldScreenMixin.java // Auto-configures and triggers world creation
 ```
 
 ## Tech Stack
@@ -70,33 +71,33 @@ JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-21.0.10.7-hotspot" ./gradlew bu
 - [x] 4.5 Implement Start button (set HuntState, trigger world creation)
 
 ### Phase 5 — World Creation
-- [ ] 5.1 Programmatic world creation (Survival, normal difficulty, cheats off, random seed)
-- [ ] 5.2 World defaults (name: "SpawnHunt-<timestamp>")
-- [ ] 5.3 Start timer on world load
+- [x] 5.1 Programmatic world creation (Survival, normal difficulty, cheats off, random seed)
+- [x] 5.2 World defaults (name: "SpawnHunt-<timestamp>")
+- [x] 5.3 Start timer on world load
 
 ### Phase 6 — In-Game HUD
-- [ ] 6.1 Create `HuntHudRenderer` (HudRenderCallback)
-- [ ] 6.2 Render timer (top-right, HH:MM:SS, semi-transparent background)
-- [ ] 6.3 Render target block (top-left, 16x16/24x24 icon + name, semi-transparent background)
-- [ ] 6.4 Pause-aware timer logic (delta-accumulation, no drift)
+- [x] 6.1 Create `HuntHudRenderer` (HudRenderCallback)
+- [x] 6.2 Render timer (mm:ss.000 format, semi-transparent background)
+- [x] 6.3 Render target block (top-left, 16x16 icon + name + timer, bordered box)
+- [x] 6.4 Pause-aware timer logic (delta-accumulation, no drift)
 
 ### Phase 7 — Win Detection
-- [ ] 7.1 Create `InventoryListener` (scan player inventory each tick for target block item)
-- [ ] 7.2 Trigger win (set won flag, freeze finalTimeMs)
-- [ ] 7.3 Play victory sound (UI_TOAST_CHALLENGE_COMPLETE or ENTITY_PLAYER_LEVELUP)
-- [ ] 7.4 Show final time prominently on screen
+- [x] 7.1 Create `InventoryListener` (scan player inventory each tick for target block item)
+- [x] 7.2 Trigger win (set won flag, freeze finalTimeMs)
+- [x] 7.3 Play victory sound (UI_TOAST_CHALLENGE_COMPLETE)
+- [x] 7.4 Show final time prominently on screen (VictoryOverlay)
 
 ### Phase 8 — Lifecycle & Cleanup
-- [ ] 8.1 Reset state on world exit
-- [ ] 8.2 Edge cases (death keeps timer, inventory/chat keeps timer, no creative access)
-- [ ] 8.3 Handle disconnect/crash (no persistence needed for MVP)
+- [x] 8.1 Reset state on world exit (WorldLifecycleHandler on DISCONNECT)
+- [x] 8.2 Edge cases (death pauses timer, cheats off, no creative access)
+- [x] 8.3 Handle disconnect/crash (no persistence needed for MVP)
 
 ### Phase 9 — Polish & Testing
-- [ ] 9.1 Visual polish (no overlap with vanilla HUD, background boxes)
-- [ ] 9.2 Screen polish (spinning animation or particles on selection screen)
-- [ ] 9.3 Test block pool (spot-check 20+ random rolls)
-- [ ] 9.4 Playtesting (easy + hard targets, timer accuracy over 1+ hour)
-- [ ] 9.5 Build & distribute (final .jar, clean install test)
+- [x] 9.1 Visual polish (bordered HUD boxes, no overlap with vanilla HUD)
+- [x] 9.2 Screen polish (bobbing block animation on selection screen)
+- [x] 9.3 Test block pool (spot-check 20+ random rolls)
+- [x] 9.4 Playtesting (easy + hard targets, timer accuracy)
+- [x] 9.5 Build & distribute (final .jar, clean install test)
 
 ## Key Design Decisions
 
