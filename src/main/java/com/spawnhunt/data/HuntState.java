@@ -40,7 +40,7 @@ public class HuntState {
     }
 
     public static void tick(boolean gamePaused) {
-        if (!active || won) return;
+        if (!active || won || lastTickTimeMs == 0) return;
 
         long now = System.currentTimeMillis();
         if (!gamePaused && !paused) {
