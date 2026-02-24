@@ -1,11 +1,12 @@
 package com.spawnhunt.screen;
 
 import com.spawnhunt.data.HuntState;
-import net.minecraft.block.Block;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.RenderTickCounter;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
@@ -45,20 +46,20 @@ public class VictoryOverlay {
 
         int textY = bannerTop + padY;
 
-        // "BLOCK FOUND!" title
-        Text title = Text.literal("BLOCK FOUND!");
+        // "ITEM FOUND!" title
+        Text title = Text.literal("ITEM FOUND!");
         int titleWidth = textRenderer.getWidth(title);
         context.drawText(textRenderer, title,
                 centerX - titleWidth / 2, textY, 0xFF55FF55, true);
         textY += fontH + lineGap;
 
-        // Target block name
-        Identifier targetId = HuntState.getTargetBlock();
+        // Target item name
+        Identifier targetId = HuntState.getTargetItem();
         if (targetId != null) {
-            Block block = Registries.BLOCK.get(targetId);
-            Text blockName = block.getName();
-            int nameWidth = textRenderer.getWidth(blockName);
-            context.drawText(textRenderer, blockName,
+            Item item = Registries.ITEM.get(targetId);
+            Text itemName = new ItemStack(item).getName();
+            int nameWidth = textRenderer.getWidth(itemName);
+            context.drawText(textRenderer, itemName,
                     centerX - nameWidth / 2, textY, 0xFFFFFF00, true);
         }
         textY += fontH + lineGap;

@@ -1,6 +1,5 @@
 package com.spawnhunt.data;
 
-import net.minecraft.block.Block;
 import net.minecraft.util.Identifier;
 
 /**
@@ -9,7 +8,7 @@ import net.minecraft.util.Identifier;
  */
 public class HuntState {
     private static boolean active = false;
-    private static Identifier targetBlock = null;
+    private static Identifier targetItem = null;
     private static long startTimeMs = 0;
     private static long accumulatedMs = 0;
     private static long lastTickTimeMs = 0;
@@ -19,7 +18,7 @@ public class HuntState {
 
     public static void reset() {
         active = false;
-        targetBlock = null;
+        targetItem = null;
         startTimeMs = 0;
         accumulatedMs = 0;
         lastTickTimeMs = 0;
@@ -28,10 +27,10 @@ public class HuntState {
         finalTimeMs = 0;
     }
 
-    public static void startHunt(Identifier block) {
+    public static void startHunt(Identifier item) {
         reset();
         active = true;
-        targetBlock = block;
+        targetItem = item;
     }
 
     public static void beginTimer() {
@@ -57,7 +56,7 @@ public class HuntState {
     }
 
     public static boolean isActive() { return active; }
-    public static Identifier getTargetBlock() { return targetBlock; }
+    public static Identifier getTargetItem() { return targetItem; }
     public static long getAccumulatedMs() { return accumulatedMs; }
     public static boolean isWon() { return won; }
     public static long getFinalTimeMs() { return finalTimeMs; }

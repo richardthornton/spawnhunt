@@ -1,6 +1,6 @@
 package com.spawnhunt;
 
-import com.spawnhunt.data.BlockPool;
+import com.spawnhunt.data.ItemPool;
 import com.spawnhunt.data.HuntState;
 import com.spawnhunt.event.InventoryListener;
 import com.spawnhunt.event.WorldLifecycleHandler;
@@ -23,13 +23,13 @@ public class SpawnHuntMod implements ClientModInitializer {
         LOGGER.info("SpawnHunt initializing...");
 
         HuntState.reset();
-        BlockPool.logPool();
+        ItemPool.logPool();
 
         // Start the hunt timer when the player joins the world
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
             if (HuntState.isActive() && !HuntState.isWon()) {
                 HuntState.beginTimer();
-                LOGGER.info("SpawnHunt: timer started! Target: {}", HuntState.getTargetBlock());
+                LOGGER.info("SpawnHunt: timer started! Target: {}", HuntState.getTargetItem());
             }
         });
 
