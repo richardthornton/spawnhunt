@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "spawnhunt",
+  "version": "${version}",
+  "name": "SpawnHunt",
+  "description": "A speedrun-style scavenger hunt. Find and collect a random survival-obtainable block as fast as possible!",
+  "authors": [],
+  "contact": {},
+  "license": "All-Rights-Reserved",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.spawnhunt.SpawnHuntMod"
+    ]
+  },
+  "mixins": [
+    "spawnhunt.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.18.0",
+    "fabric-api": "*",
+    "minecraft": "~1.21.11",
+    "java": ">=21"
+  }
+}
