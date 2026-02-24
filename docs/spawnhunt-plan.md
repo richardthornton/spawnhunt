@@ -124,15 +124,15 @@ Pool is computed once at mod init and cached.
 | 3.2 | Position the button | ✅ Done | Centered, at `height/4 + 132` — below existing menu buttons. Standard 200x20 size. |
 | 3.3 | Wire button to open `SpawnHuntScreen` | ✅ Done | Opens `SpawnHuntScreen` with random block, Reroll/Cancel/Start buttons (Start is placeholder for Phase 5). |
 
-### Phase 4 — Block Selection Screen
+### Phase 4 — Block Selection Screen ✅
 
-| # | Task | Detail |
-|---|---|---|
-| 4.1 | Create `SpawnHuntScreen` (extends `Screen`) | Layout: centred block icon + block name, with three buttons below. |
-| 4.2 | Render the target block | Use `ItemRenderer` to draw the block's item form at large scale (e.g. 4×). Display the translated block name below it. |
-| 4.3 | Implement **Reroll** button | Calls `BlockPool.getRandomBlock()` and refreshes the display. Unlimited. |
-| 4.4 | Implement **Cancel** button | Returns to the title screen (`setScreen(new TitleScreen())`). |
-| 4.5 | Implement **Start** button | Sets `HuntState` target, triggers world creation (see Phase 5). |
+| # | Task | Status | Detail |
+|---|---|---|---|
+| 4.1 | Create `SpawnHuntScreen` (extends `Screen`) | ✅ Done | Centered layout: 4x block icon, translated name, three buttons below. |
+| 4.2 | Render the target block | ✅ Done | `DrawContext.drawItem()` at 4x scale via JOML `Matrix3x2fStack`. Translated block name below icon. |
+| 4.3 | Implement **Reroll** button | ✅ Done | Calls `BlockPool.getRandomBlock()`, refreshes display. Unlimited. |
+| 4.4 | Implement **Cancel** button | ✅ Done | Returns to title screen. |
+| 4.5 | Implement **Start** button | ✅ Done | Sets `HuntState.startHunt()` with target block. World creation placeholder for Phase 5. |
 
 ### Phase 5 — World Creation
 

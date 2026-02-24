@@ -63,11 +63,11 @@ JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-21.0.10.7-hotspot" ./gradlew bu
 - [x] 3.3 Wire button to open `SpawnHuntScreen`
 
 ### Phase 4 — Block Selection Screen
-- [ ] 4.1 Create `SpawnHuntScreen` (extends Screen, layout with block icon + name + buttons)
-- [ ] 4.2 Render target block (ItemRenderer at 4x scale, translated block name)
-- [ ] 4.3 Implement Reroll button (unlimited)
-- [ ] 4.4 Implement Cancel button (return to title screen)
-- [ ] 4.5 Implement Start button (set HuntState, trigger world creation)
+- [x] 4.1 Create `SpawnHuntScreen` (extends Screen, layout with block icon + name + buttons)
+- [x] 4.2 Render target block (ItemRenderer at 4x scale, translated block name)
+- [x] 4.3 Implement Reroll button (unlimited)
+- [x] 4.4 Implement Cancel button (return to title screen)
+- [x] 4.5 Implement Start button (set HuntState, trigger world creation)
 
 ### Phase 5 — World Creation
 - [ ] 5.1 Programmatic world creation (Survival, normal difficulty, cheats off, random seed)
