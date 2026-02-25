@@ -21,6 +21,8 @@ public class HuntHudRenderer {
     private static final int BEST_COLOR = 0xFFAAFFAA;
     private static final int BG_COLOR = 0x80000000;
     private static final int BORDER_COLOR = 0x40FFFFFF;
+    private static final int WIN_BORDER_COLOR = 0xC055FF55;
+    private static final int WIN_NAME_COLOR = 0xFF55FF55;
 
     public static void render(DrawContext context, RenderTickCounter tickCounter) {
         if (!HuntState.isActive()) return;
@@ -65,17 +67,18 @@ public class HuntHudRenderer {
         int nameOffsetY = PADDING + (16 - textRenderer.fontHeight) / 2;
         int boxH = nameOffsetY + textRenderer.fontHeight + 1 + scaledTimerHeight + bestLineHeight + PADDING;
 
-        // Background + border
+        // Background + border (green on win)
+        boolean won = HuntState.isWon();
         context.fill(boxX, boxY, boxX + boxW, boxY + boxH, BG_COLOR);
-        drawBorder(context, boxX, boxY, boxW, boxH);
+        drawBorder(context, boxX, boxY, boxW, boxH, won ? WIN_BORDER_COLOR : BORDER_COLOR);
 
         // Item icon
         context.drawItem(stack, boxX + PADDING, boxY + PADDING);
 
-        // Item name (vertically centered with the 16px icon)
+        // Item name (vertically centered with the 16px icon, green on win)
         int nameY = boxY + PADDING + (16 - textRenderer.fontHeight) / 2;
         context.drawText(textRenderer, itemName,
-                boxX + PADDING + 16 + PADDING, nameY, 0xFFFFFFFF, true);
+                boxX + PADDING + 16 + PADDING, nameY, won ? WIN_NAME_COLOR : 0xFFFFFFFF, true);
 
         // Timer just below the block name text
         int timerY = nameY + textRenderer.fontHeight + 1;
@@ -96,10 +99,10 @@ public class HuntHudRenderer {
         }
     }
 
-    private static void drawBorder(DrawContext context, int x, int y, int w, int h) {
-        context.fill(x, y, x + w, y + 1, BORDER_COLOR);         // top
-        context.fill(x, y + h - 1, x + w, y + h, BORDER_COLOR); // bottom
-        context.fill(x, y, x + 1, y + h, BORDER_COLOR);         // left
-        context.fill(x + w - 1, y, x + w, y + h, BORDER_COLOR); // right
+    private static void drawBorder(DrawContext context, int x, int y, int w, int h, int color) {
+        context.fill(x, y, x + w, y + 1, color);         // top
+        context.fill(x, y + h - 1, x + w, y + h, color); // bottom
+        context.fill(x, y, x + 1, y + h, color);         // left
+        context.fill(x + w - 1, y, x + w, y + h, color); // right
     }
 }

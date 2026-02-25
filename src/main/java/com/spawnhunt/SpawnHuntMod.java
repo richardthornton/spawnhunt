@@ -5,7 +5,7 @@ import com.spawnhunt.data.HuntState;
 import com.spawnhunt.event.InventoryListener;
 import com.spawnhunt.event.WorldLifecycleHandler;
 import com.spawnhunt.hud.HuntHudRenderer;
-import com.spawnhunt.screen.VictoryOverlay;
+
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
@@ -45,9 +45,8 @@ public class SpawnHuntMod implements ClientModInitializer {
         // Reset hunt state when disconnecting from a world
         WorldLifecycleHandler.register();
 
-        // Render the HUD overlay (target block + timer + victory)
+        // Render the HUD overlay (target block + timer)
         HudRenderCallback.EVENT.register(HuntHudRenderer::render);
-        HudRenderCallback.EVENT.register(VictoryOverlay::render);
 
         LOGGER.info("SpawnHunt initialized!");
     }

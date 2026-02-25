@@ -16,13 +16,15 @@ Speedrun-style scavenger hunt: find and collect a random survival-obtainable blo
 com.spawnhunt
 ├── SpawnHuntMod.java              // Entrypoint (ClientModInitializer)
 ├── data/
-│   ├── BlockPool.java             // Survival-obtainable block registry & random selection
-│   └── HuntState.java            // Active hunt state (target, timer, win flag)
+│   ├── ItemPool.java              // Survival-obtainable item registry & random selection
+│   ├── HuntState.java            // Active hunt state (target, timer, win flag)
+│   └── ResultStore.java          // Persisted run results (last/top times per item)
 ├── screen/
-│   ├── SpawnHuntScreen.java       // Block selection GUI (Reroll / Cancel / Start)
-│   └── VictoryOverlay.java        // Win overlay (final time display)
+│   ├── SpawnHuntScreen.java       // Item selection GUI (Cancel / List / Reroll / Start)
+│   ├── ItemChooserScreen.java     // Searchable item list picker (Back / Select)
+│   └── VictoryOverlay.java        // (unused) Legacy win overlay
 ├── hud/
-│   └── HuntHudRenderer.java      // In-game HUD (timer + target block icon/name)
+│   └── HuntHudRenderer.java      // In-game HUD (timer + target icon/name, green border/name on win)
 ├── event/
 │   ├── InventoryListener.java     // Detects target block entering inventory
 │   └── WorldLifecycleHandler.java // Resets hunt state on world exit
@@ -86,7 +88,7 @@ JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-21.0.10.7-hotspot" ./gradlew bu
 - [x] 7.1 Create `InventoryListener` (scan player inventory each tick for target block item)
 - [x] 7.2 Trigger win (set won flag, freeze finalTimeMs)
 - [x] 7.3 Play victory sound (UI_TOAST_CHALLENGE_COMPLETE)
-- [x] 7.4 Show final time prominently on screen (VictoryOverlay)
+- [x] 7.4 Win indicated by green HUD border + item name (VictoryOverlay removed)
 
 ### Phase 8 — Lifecycle & Cleanup
 - [x] 8.1 Reset state on world exit (WorldLifecycleHandler on DISCONNECT)
@@ -103,14 +105,23 @@ JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-21.0.10.7-hotspot" ./gradlew bu
 ## Key Design Decisions
 
 - **State is not persisted** — exiting the world ends the hunt. Crash = hunt over.
-- **Block pool** uses tag-and-filter: start with all registry blocks, keep those with item forms, exclude unobtainables via a static exclusion set.
+- **Item pool** uses tag-and-filter: start with all registry items, filter survival-obtainables, exclude unobtainables via a static exclusion set.
+- **Win state** — no separate overlay; HUD border and item name turn green, victory sound plays.
 - **Timer** uses delta-accumulation (not start-time subtraction) to avoid drift across pause/unpause.
 - **Inventory scanning** is trivially fast (36 slots + armor + offhand per tick).
 
 ## Key Risks
 
 - **Programmatic world creation** has no clean public API — may need deep mixins or auto-click approach as fallback.
-- **Block pool accuracy** — maintain exclusion list carefully, log pool on startup, iterate via community feedback.
+- **Item pool accuracy** — maintain exclusion list carefully, log pool on startup, iterate via community feedback.
+
+## Versioning
+
+Uses [SemVer](https://semver.org/). Version is set in `gradle.properties` (`mod_version`).
+
+| Version | Date       | Notes                                    |
+|---------|------------|------------------------------------------|
+| 1.0.0   | 2026-02-26 | Initial public release on Modrinth       |
 
 ## Conventions
 

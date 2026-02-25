@@ -47,14 +47,14 @@ public class ItemChooserScreen extends Screen {
 
         refreshList();
 
-        selectButton = ButtonWidget.builder(Text.literal("Select"), button -> selectAndReturn())
-                .dimensions(this.width / 2 - 104, this.height - 28, 100, 20).build();
-        this.addDrawableChild(selectButton);
-
         this.addDrawableChild(
                 ButtonWidget.builder(Text.literal("Back"), button -> close())
-                        .dimensions(this.width / 2 + 4, this.height - 28, 100, 20).build()
+                        .dimensions(this.width / 2 - 104, this.height - 28, 100, 20).build()
         );
+
+        selectButton = ButtonWidget.builder(Text.literal("Select"), button -> selectAndReturn())
+                .dimensions(this.width / 2 + 4, this.height - 28, 100, 20).build();
+        this.addDrawableChild(selectButton);
 
         this.setInitialFocus(searchField);
     }
