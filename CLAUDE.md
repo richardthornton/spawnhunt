@@ -5,7 +5,8 @@ Speedrun-style scavenger hunt: find and collect a random survival-obtainable blo
 
 ## Testing Environment
 
-- **Minecraft instance:** `C:\MultiMC\instances\SpawnHunt\.minecraft`
+- **Minecraft instance (macOS):** `/Applications/MultiMC.app/Data/instances/SpawnHunt/.minecraft`
+- **Minecraft instance (Windows):** `C:\MultiMC\instances\SpawnHunt\.minecraft`
 - Built `.jar` goes into the `mods/` folder of that instance
 - Requires Fabric Loader + Fabric API for MC 1.21.11
 

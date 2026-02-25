@@ -29,8 +29,13 @@ public abstract class CreateWorldScreenMixin {
 
         String timestamp = String.valueOf(System.currentTimeMillis() / 1000);
         creator.setWorldName("SpawnHunt-" + timestamp);
-        creator.setGameMode(WorldCreator.Mode.SURVIVAL);
-        creator.setDifficulty(Difficulty.NORMAL);
+        if (HuntState.isHardcore()) {
+            creator.setGameMode(WorldCreator.Mode.HARDCORE);
+            creator.setDifficulty(Difficulty.HARD);
+        } else {
+            creator.setGameMode(WorldCreator.Mode.SURVIVAL);
+            creator.setDifficulty(Difficulty.NORMAL);
+        }
         creator.setCheatsEnabled(false);
 
         SpawnHuntMod.LOGGER.info("SpawnHunt: auto-creating world '{}'", creator.getWorldName());

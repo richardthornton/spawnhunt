@@ -8,6 +8,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.gui.screen.world.CreateWorldScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.gui.widget.CheckboxWidget;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
@@ -31,44 +32,74 @@ public class SpawnHuntScreen extends Screen {
 
     private final Random random = new Random();
     private Item targetItem;
+    private boolean hardcore;
 
     public SpawnHuntScreen() {
         super(Text.literal("SpawnHunt"));
         this.targetItem = ItemPool.getRandomItem(random);
+        this.hardcore = true;
+    }
+
+    public SpawnHuntScreen(Item preselectedItem) {
+        this(preselectedItem, true);
+    }
+
+    public SpawnHuntScreen(Item preselectedItem, boolean hardcore) {
+        super(Text.literal("SpawnHunt"));
+        this.targetItem = preselectedItem;
+        this.hardcore = hardcore;
     }
 
     @Override
     protected void init() {
         int buttonY = this.height / 2 + 50;
 
-        // Reroll button — pick a new random item
-        this.addDrawableChild(
-                ButtonWidget.builder(Text.literal("Reroll"), button -> {
-                    this.targetItem = ItemPool.getRandomItem(random);
-                })
-                .dimensions(this.width / 2 - 154, buttonY, 96, 20)
-                .build()
-        );
-
         // Cancel button — return to title screen
         this.addDrawableChild(
                 ButtonWidget.builder(Text.literal("Cancel"), button -> {
                     this.client.setScreen(new TitleScreen());
                 })
-                .dimensions(this.width / 2 - 48, buttonY, 96, 20)
+                .dimensions(this.width / 2 - 164, buttonY, 76, 20)
+                .build()
+        );
+
+        // Reroll button — pick a new random item
+        this.addDrawableChild(
+                ButtonWidget.builder(Text.literal("Reroll"), button -> {
+                    this.targetItem = ItemPool.getRandomItem(random);
+                })
+                .dimensions(this.width / 2 - 80, buttonY, 76, 20)
+                .build()
+        );
+
+        // Choose button — open item chooser screen
+        this.addDrawableChild(
+                ButtonWidget.builder(Text.literal("Choose"), button -> {
+                    this.client.setScreen(new ItemChooserScreen(this.targetItem, this.hardcore));
+                })
+                .dimensions(this.width / 2 + 4, buttonY, 76, 20)
                 .build()
         );
 
         // Start button — sets hunt target, opens world creation
         this.addDrawableChild(
                 ButtonWidget.builder(Text.literal("Start"), button -> {
-                    HuntState.startHunt(Registries.ITEM.getId(targetItem));
+                    HuntState.startHunt(Registries.ITEM.getId(targetItem), this.hardcore);
                     CreateWorldScreen.show(this.client, () -> {
                         this.client.setScreen(new TitleScreen());
                     });
                 })
-                .dimensions(this.width / 2 + 58, buttonY, 96, 20)
+                .dimensions(this.width / 2 + 88, buttonY, 76, 20)
                 .build()
+        );
+
+        // Hardcore checkbox — checked by default
+        this.addDrawableChild(
+                CheckboxWidget.builder(Text.literal("Hardcore"), this.textRenderer)
+                        .pos(this.width / 2 - 30, buttonY + 28)
+                        .checked(this.hardcore)
+                        .callback((checkbox, checked) -> this.hardcore = checked)
+                        .build()
         );
     }
 

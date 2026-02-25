@@ -15,6 +15,7 @@ public class HuntState {
     private static boolean paused = false;
     private static boolean won = false;
     private static long finalTimeMs = 0;
+    private static boolean hardcore = true;
 
     public static void reset() {
         active = false;
@@ -25,12 +26,14 @@ public class HuntState {
         paused = false;
         won = false;
         finalTimeMs = 0;
+        hardcore = true;
     }
 
-    public static void startHunt(Identifier item) {
+    public static void startHunt(Identifier item, boolean hardcoreMode) {
         reset();
         active = true;
         targetItem = item;
+        hardcore = hardcoreMode;
     }
 
     public static void beginTimer() {
@@ -60,6 +63,7 @@ public class HuntState {
     public static long getAccumulatedMs() { return accumulatedMs; }
     public static boolean isWon() { return won; }
     public static long getFinalTimeMs() { return finalTimeMs; }
+    public static boolean isHardcore() { return hardcore; }
 
     public static String formatTime(long ms) {
         long totalSeconds = ms / 1000;
