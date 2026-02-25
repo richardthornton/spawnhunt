@@ -30,6 +30,12 @@
 2. Drop `spawnhunt-1.0.0.jar` into your `mods` folder
 3. Launch the game — the **SpawnHunt** button appears on the title screen
 
+## Community & Support
+
+[![Discord](https://img.shields.io/badge/Discord-Join%20Server-5865F2?logo=discord&logoColor=white)](https://discord.gg/nU4Bv64)
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-Support-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/richardthornton)
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-Support-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/richardthornton)
+
 ## License
 
 [MIT](LICENSE)
