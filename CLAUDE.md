@@ -46,7 +46,7 @@ com.spawnhunt
 # Build (must use JDK 21)
 JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-21.0.10.7-hotspot" ./gradlew build
 
-# Output jar: build/libs/spawnhunt-1.0.0.jar
+# Output jar: build/libs/spawnhunt-<version>.jar
 ```
 
 ## Development Phases & Progress
@@ -121,6 +121,7 @@ Uses [SemVer](https://semver.org/). Version is set in `gradle.properties` (`mod_
 
 | Version | Date       | Notes                                    |
 |---------|------------|------------------------------------------|
+| 1.1.0   | 2026-02-26 | UI polish, win state rework, world naming |
 | 1.0.0   | 2026-02-26 | Initial public release on Modrinth       |
 
 ## Conventions
