@@ -6,7 +6,7 @@
   "description": "A speedrun-style scavenger hunt. Find and collect a random survival-obtainable block as fast as possible!",
   "authors": [],
   "contact": {},
-  "license": "All-Rights-Reserved",
+  "license": "MIT",
   "environment": "client",
   "entrypoints": {
     "client": [

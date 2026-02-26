@@ -20,14 +20,14 @@
 
 ## Requirements
 
-- Minecraft Java Edition 1.21.1
+- Minecraft Java Edition 1.21.11
 - [Fabric Loader](https://fabricmc.net/) 0.18.4+
 - [Fabric API](https://modrinth.com/mod/fabric-api) 0.141.3+
 
 ## Installation
 
-1. Install Fabric Loader and Fabric API for Minecraft 1.21.1
-2. Drop `spawnhunt-1.0.0.jar` into your `mods` folder
+1. Install Fabric Loader and Fabric API for Minecraft 1.21.11
+2. Drop the `spawnhunt` jar into your `mods` folder
 3. Launch the game — the **SpawnHunt** button appears on the title screen
 
 ## Community & Support

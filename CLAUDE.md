@@ -21,8 +21,7 @@ com.spawnhunt
 │   └── ResultStore.java          // Persisted run results (last/top times per item)
 ├── screen/
 │   ├── SpawnHuntScreen.java       // Item selection GUI (Cancel / List / Reroll / Start)
-│   ├── ItemChooserScreen.java     // Searchable item list picker (Back / Select)
-│   └── VictoryOverlay.java        // (unused) Legacy win overlay
+│   └── ItemChooserScreen.java     // Searchable item list picker (Back / Select)
 ├── hud/
 │   └── HuntHudRenderer.java      // In-game HUD (timer + target icon/name, green border/name on win)
 ├── event/
