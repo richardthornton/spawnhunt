@@ -1,0 +1,34 @@
+name: Item Pool Issue
+description: An item is missing or shouldn't be in the pool
+labels: ["item pool"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Think an item is incorrectly included or missing? Let us know!
+
+  - type: input
+    id: item-name
+    attributes:
+      label: Item name
+      placeholder: "e.g. Enchanted Golden Apple"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: issue-type
+    attributes:
+      label: What's the issue?
+      options:
+        - "Item is in the pool but shouldn't be (unobtainable in Survival)"
+        - "Item is missing from the pool but should be included"
+    validations:
+      required: true
+
+  - type: textarea
+    id: explanation
+    attributes:
+      label: Why?
+      placeholder: "e.g. This item can only be found in creative mode"
+    validations:
+      required: false

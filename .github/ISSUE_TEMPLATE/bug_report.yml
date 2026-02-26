@@ -1,0 +1,70 @@
+name: Bug Report
+description: Something isn't working right
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug! Fill in what you can — every bit helps.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe what went wrong.
+      placeholder: "e.g. The timer kept running after I found the item"
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What should have happened?
+      placeholder: "e.g. The timer should have stopped and the HUD should have turned green"
+    validations:
+      required: false
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: How can we make this happen? (if you know)
+      placeholder: |
+        1. Start a hunt for ...
+        2. Do ...
+        3. Bug occurs
+    validations:
+      required: false
+
+  - type: input
+    id: spawnhunt-version
+    attributes:
+      label: SpawnHunt version
+      placeholder: "e.g. 1.1.0"
+    validations:
+      required: true
+
+  - type: input
+    id: minecraft-version
+    attributes:
+      label: Minecraft version
+      placeholder: "e.g. 1.21.11"
+    validations:
+      required: true
+
+  - type: textarea
+    id: other-mods
+    attributes:
+      label: Other mods installed
+      description: List any other mods you're running, or "none"
+      placeholder: "e.g. Sodium, Iris"
+    validations:
+      required: false
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Screenshots, crash logs, or other context
+    validations:
+      required: false

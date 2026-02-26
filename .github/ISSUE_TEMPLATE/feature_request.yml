@@ -1,0 +1,32 @@
+name: Feature Request
+description: Suggest an idea or improvement
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Got an idea? We'd love to hear it!
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What would you like to see?
+      placeholder: "e.g. A leaderboard that tracks times across all items"
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why would this be useful?
+      placeholder: "e.g. It would add motivation to keep replaying different items"
+    validations:
+      required: false
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Screenshots, mockups, or other context
+    validations:
+      required: false
