@@ -120,8 +120,9 @@ Uses [SemVer](https://semver.org/). Version is set in `gradle.properties` (`mod_
 
 | Version | Date       | Notes                                    |
 |---------|------------|------------------------------------------|
-| 1.1.0   | 2026-02-26 | UI polish, win state rework, world naming |
-| 1.0.0   | 2026-02-26 | Initial public release on Modrinth       |
+| 1.2.0   | 2026-03-12 | Music disc song names, display name caching |
+| 1.1.0   | 2026-02-26 | UI polish, win state rework, world naming   |
+| 1.0.0   | 2026-02-26 | Initial public release on Modrinth          |
 
 ## Conventions
 
