@@ -19,6 +19,7 @@ import java.util.*;
  */
 public class ItemPool {
     private static List<Item> pool = null;
+    private static final Map<Item, Text> displayNameCache = new HashMap<>();
 
     private static final Set<String> EXCLUDED = Set.of(
             // Creative-only / technical
@@ -94,13 +95,16 @@ public class ItemPool {
     private static final String MUSIC_DISC_PREFIX = "music_disc_";
 
     /**
-     * Returns a display name for the item. For music discs, appends the song
-     * description (e.g. "Music Disc - C418 - 13") since getName() alone just
-     * returns "Music Disc" for all of them.
+     * Returns a display name for the item. For music discs, returns the song
+     * description (e.g. "C418 - chirp") since getName() alone just returns
+     * "Music Disc" for all of them.
      */
     public static Text getDisplayName(Item item) {
+        Text cached = displayNameCache.get(item);
+        if (cached != null) return cached;
+
         ItemStack stack = new ItemStack(item);
-        Text baseName = stack.getName();
+        Text name = stack.getName();
 
         Identifier id = Registries.ITEM.getId(item);
         String path = id.getPath();
@@ -108,13 +112,13 @@ public class ItemPool {
         if (path.startsWith(MUSIC_DISC_PREFIX)) {
             String songId = path.substring(MUSIC_DISC_PREFIX.length());
             String songDesc = Text.translatable("jukebox_song.minecraft." + songId).getString();
-            // If translation resolved (not the raw key), append it
             if (!songDesc.startsWith("jukebox_song.")) {
-                return Text.literal(songDesc);
+                name = Text.literal(songDesc);
             }
         }
 
-        return baseName;
+        displayNameCache.put(item, name);
+        return name;
     }
 
     public static Item getRandomItem(Random random) {
