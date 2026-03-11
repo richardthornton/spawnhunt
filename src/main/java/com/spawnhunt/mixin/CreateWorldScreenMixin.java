@@ -2,6 +2,7 @@ package com.spawnhunt.mixin;
 
 import com.spawnhunt.SpawnHuntMod;
 import com.spawnhunt.data.HuntState;
+import com.spawnhunt.data.ItemPool;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.world.CreateWorldScreen;
 import net.minecraft.client.gui.screen.world.WorldCreator;
@@ -31,7 +32,7 @@ public abstract class CreateWorldScreenMixin {
         WorldCreator creator = this.getWorldCreator();
 
         Item targetItem = Registries.ITEM.get(HuntState.getTargetItem());
-        String itemName = new ItemStack(targetItem).getName().getString();
+        String itemName = ItemPool.getDisplayName(targetItem).getString();
         creator.setWorldName("SpawnHunt - " + itemName);
         if (HuntState.isHardcore()) {
             creator.setGameMode(WorldCreator.Mode.HARDCORE);

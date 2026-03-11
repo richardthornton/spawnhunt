@@ -136,7 +136,7 @@ public class SpawnHuntScreen extends Screen {
         context.getMatrices().popMatrix();
 
         // Translated item name below the icon (fixed position)
-        Text itemName = new ItemStack(targetItem).getName();
+        Text itemName = ItemPool.getDisplayName(targetItem);
         context.drawText(this.textRenderer, itemName,
                 centerX - this.textRenderer.getWidth(itemName) / 2, nameY, 0xFFFFFF00, true);
 
