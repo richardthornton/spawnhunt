@@ -36,7 +36,7 @@ public class ItemChooserScreen extends Screen {
     protected void init() {
         sortedItems = new ArrayList<>(ItemPool.getPool());
         sortedItems.sort(Comparator.comparing(item ->
-                new ItemStack(item).getName().getString().toLowerCase(Locale.ROOT)));
+                ItemPool.getDisplayName(item).getString().toLowerCase(Locale.ROOT)));
 
         searchField = new TextFieldWidget(this.textRenderer, this.width / 2 - 100, 22, 200, 20, Text.literal("Search"));
         searchField.setChangedListener(text -> refreshList());
@@ -72,7 +72,7 @@ public class ItemChooserScreen extends Screen {
 
         ItemListWidget.Entry toSelect = null;
         for (Item item : sortedItems) {
-            String name = new ItemStack(item).getName().getString().toLowerCase(Locale.ROOT);
+            String name = ItemPool.getDisplayName(item).getString().toLowerCase(Locale.ROOT);
             if (query.isEmpty() || name.contains(query)) {
                 ItemListWidget.Entry entry = itemList.addItem(item);
                 if (item == currentItem && toSelect == null) {
@@ -134,7 +134,7 @@ public class ItemChooserScreen extends Screen {
 
             public Entry(Item item) {
                 this.item = item;
-                this.displayName = new ItemStack(item).getName();
+                this.displayName = ItemPool.getDisplayName(item);
             }
 
             public Item getItem() {

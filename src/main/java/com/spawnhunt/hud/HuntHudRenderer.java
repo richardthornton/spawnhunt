@@ -6,6 +6,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.RenderTickCounter;
+import com.spawnhunt.data.ItemPool;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
@@ -40,7 +41,7 @@ public class HuntHudRenderer {
 
         Item item = Registries.ITEM.get(targetId);
         ItemStack stack = new ItemStack(item);
-        Text itemName = stack.getName();
+        Text itemName = ItemPool.getDisplayName(item);
         int nameWidth = textRenderer.getWidth(itemName);
 
         // Timer text
