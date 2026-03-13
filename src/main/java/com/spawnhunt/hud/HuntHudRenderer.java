@@ -17,10 +17,12 @@ public class HuntHudRenderer {
 
     private static final int PADDING = 4;
     private static final int GAP = 2;
+    private static final int FIXED_BOX_WIDTH = 160;
+    private static final int BOSS_BAR_CLEARANCE = 30;
     private static final float TIMER_SCALE = 1.0f;
     private static final float BEST_SCALE = 0.75f;
     private static final int BEST_COLOR = 0xFFAAFFAA;
-    private static final int BG_COLOR = 0x80000000;
+    private static final int BG_COLOR = 0xCC000000;
     private static final int BORDER_COLOR = 0x40FFFFFF;
     private static final int WIN_BORDER_COLOR = 0xC055FF55;
     private static final int WIN_NAME_COLOR = 0xFF55FF55;
@@ -57,12 +59,12 @@ public class HuntHudRenderer {
         String bestStr = showBest ? "Best: " + HuntState.formatTime(bestTimeMs) : "";
         int bestWidth = showBest ? (int) (textRenderer.getWidth(bestStr) * BEST_SCALE) : 0;
 
-        // Box sizing: text area starts after icon + gap, width fits widest line
+        // Box sizing: fixed width, centred horizontally, below boss bar area
+        int screenWidth = MinecraftClient.getInstance().getWindow().getScaledWidth();
+        int boxW = FIXED_BOX_WIDTH;
+        int boxX = (screenWidth - boxW) / 2;
+        int boxY = BOSS_BAR_CLEARANCE;
         int textStartX = PADDING + 16 + PADDING;
-        int maxTextWidth = Math.max(nameWidth, Math.max(timerWidth, bestWidth));
-        int boxX = PADDING;
-        int boxY = PADDING;
-        int boxW = textStartX + maxTextWidth + PADDING;
         // nameY offset from boxY is: PADDING + (16 - fontH) / 2
         // timer starts at: nameY + fontH + 1, height is scaledTimerHeight
         int nameOffsetY = PADDING + (16 - textRenderer.fontHeight) / 2;
