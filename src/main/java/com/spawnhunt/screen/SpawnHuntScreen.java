@@ -20,7 +20,7 @@ import java.util.Random;
 
 /**
  * Item selection screen — shown when the player clicks "SpawnHunt" on the title screen.
- * Displays a random survival-obtainable item at 4x scale with Reroll / Cancel / Start buttons.
+ * Vertical layout optimised for YouTube Shorts capture.
  */
 public class SpawnHuntScreen extends Screen {
     private static final int ICON_SCALE = 4;
@@ -29,10 +29,17 @@ public class SpawnHuntScreen extends Screen {
     private static final int PANEL_PADDING = 6;
     private static final int PANEL_BG = 0x80000000;
     private static final int PANEL_BORDER = 0x60444444;
+    private static final int BTN_W = 76;
+    private static final int BTN_H = 20;
+    private static final int BTN_GAP = 4;
 
     private final Random random = new Random();
     private Item targetItem;
     private boolean hardcore;
+    private boolean showHistory;
+
+    // Clickable "History" / "Back" link bounds (set during render)
+    private int historyLinkX, historyLinkY, historyLinkW, historyLinkH;
 
     public SpawnHuntScreen() {
         super(Text.literal("SpawnHunt"));
@@ -52,36 +59,20 @@ public class SpawnHuntScreen extends Screen {
 
     @Override
     protected void init() {
-        int buttonY = this.height / 2 + 50;
+        int centerX = this.width / 2;
 
-        // Cancel button — return to title screen
-        this.addDrawableChild(
-                ButtonWidget.builder(Text.literal("Cancel"), button -> {
-                    this.client.setScreen(new TitleScreen());
-                })
-                .dimensions(this.width / 2 - 164, buttonY, 76, 20)
-                .build()
-        );
+        // Vertical layout anchor: compute total content height and center it
+        // Title(10) + 4 + Subtitle(10) + 8 + Icon(64) + 4 + Name(10) + 4 + HistoryLink(10)
+        //   + 10 + ButtonRow1(20) + 4 + ButtonRow2(20) + 8 + Checkbox(20) = ~196
+        int totalHeight = 196;
+        int topY = (this.height - totalHeight) / 2;
 
-        // Choose button — open item chooser screen
-        this.addDrawableChild(
-                ButtonWidget.builder(Text.literal("List"), button -> {
-                    this.client.setScreen(new ItemChooserScreen(this.targetItem, this.hardcore));
-                })
-                .dimensions(this.width / 2 - 80, buttonY, 76, 20)
-                .build()
-        );
+        // Button positions: 2x2 grid centered
+        int btnBlockY = topY + 10 + 4 + 10 + 8 + ICON_SIZE + 4 + 10 + 4 + 10 + 10;
+        int leftBtnX = centerX - BTN_W - BTN_GAP / 2;
+        int rightBtnX = centerX + BTN_GAP / 2;
 
-        // Reroll button — pick a new random item
-        this.addDrawableChild(
-                ButtonWidget.builder(Text.literal("Reroll"), button -> {
-                    this.targetItem = ItemPool.getRandomItem(random);
-                })
-                .dimensions(this.width / 2 + 4, buttonY, 76, 20)
-                .build()
-        );
-
-        // Start button — sets hunt target, opens world creation
+        // Row 1: Start, Reroll
         this.addDrawableChild(
                 ButtonWidget.builder(Text.literal("Start"), button -> {
                     HuntState.startHunt(Registries.ITEM.getId(targetItem), this.hardcore);
@@ -89,14 +80,42 @@ public class SpawnHuntScreen extends Screen {
                         this.client.setScreen(new TitleScreen());
                     });
                 })
-                .dimensions(this.width / 2 + 88, buttonY, 76, 20)
+                .dimensions(leftBtnX, btnBlockY, BTN_W, BTN_H)
                 .build()
         );
 
-        // Hardcore checkbox — checked by default
+        this.addDrawableChild(
+                ButtonWidget.builder(Text.literal("Reroll"), button -> {
+                    this.targetItem = ItemPool.getRandomItem(random);
+                    this.showHistory = false;
+                })
+                .dimensions(rightBtnX, btnBlockY, BTN_W, BTN_H)
+                .build()
+        );
+
+        // Row 2: List, Cancel
+        int row2Y = btnBlockY + BTN_H + BTN_GAP;
+        this.addDrawableChild(
+                ButtonWidget.builder(Text.literal("List"), button -> {
+                    this.client.setScreen(new ItemChooserScreen(this.targetItem, this.hardcore));
+                })
+                .dimensions(leftBtnX, row2Y, BTN_W, BTN_H)
+                .build()
+        );
+
+        this.addDrawableChild(
+                ButtonWidget.builder(Text.literal("Cancel"), button -> {
+                    this.client.setScreen(new TitleScreen());
+                })
+                .dimensions(rightBtnX, row2Y, BTN_W, BTN_H)
+                .build()
+        );
+
+        // Hardcore checkbox — centered below buttons
+        int checkboxY = row2Y + BTN_H + 8;
         this.addDrawableChild(
                 CheckboxWidget.builder(Text.literal("Hardcore"), this.textRenderer)
-                        .pos(this.width / 2 - 30, buttonY + 28)
+                        .pos(centerX - 30, checkboxY)
                         .checked(this.hardcore)
                         .callback((checkbox, checked) -> this.hardcore = checked)
                         .build()
@@ -111,50 +130,93 @@ public class SpawnHuntScreen extends Screen {
         super.render(context, mouseX, mouseY, delta);
 
         int centerX = this.width / 2;
+        int totalHeight = 196;
+        int topY = (this.height - totalHeight) / 2;
+        int curY = topY;
 
-        // Bobbing animation for the item icon
-        float bob = (float) Math.sin(System.currentTimeMillis() / 500.0) * 3.0f;
-        int iconY = (int) (this.height / 2 - ICON_SIZE + 10 + bob);
-        int nameY = this.height / 2 + 10 + 8 + 4; // fixed position, below icon range
-
-        // Title — anchored relative to block icon so it stays close on all resolutions
-        int titleBaseY = this.height / 2 - ICON_SIZE + 10; // same as panelY / icon base
+        // Title
         Text title = Text.literal("SpawnHunt");
         context.drawText(this.textRenderer, title,
-                centerX - this.textRenderer.getWidth(title) / 2, titleBaseY - 40, 0xFFFFFFFF, true);
+                centerX - this.textRenderer.getWidth(title) / 2, curY, 0xFFFFFFFF, true);
+        curY += 10 + 4;
 
         // Subtitle
         Text subtitle = Text.literal("Your target:");
         context.drawText(this.textRenderer, subtitle,
-                centerX - this.textRenderer.getWidth(subtitle) / 2, titleBaseY - 26, 0xFFAAAAAA, true);
+                centerX - this.textRenderer.getWidth(subtitle) / 2, curY, 0xFFAAAAAA, true);
+        curY += 10 + 8;
 
-        // Item icon at 4x scale, centered, with bobbing
-        context.getMatrices().pushMatrix();
-        context.getMatrices().translate((float) (centerX - ICON_SIZE / 2), (float) iconY);
-        context.getMatrices().scale((float) ICON_SCALE, (float) ICON_SCALE);
-        context.drawItem(new ItemStack(targetItem), 0, 0);
-        context.getMatrices().popMatrix();
+        // Icon area (or history panels)
+        int iconAreaY = curY;
+        if (showHistory) {
+            renderHistoryArea(context, centerX, iconAreaY);
+        } else {
+            // Bobbing animation
+            float bob = (float) Math.sin(System.currentTimeMillis() / 500.0) * 3.0f;
+            int iconY = (int) (iconAreaY + bob);
 
-        // Translated item name below the icon (fixed position)
+            context.getMatrices().pushMatrix();
+            context.getMatrices().translate((float) (centerX - ICON_SIZE / 2), (float) iconY);
+            context.getMatrices().scale((float) ICON_SCALE, (float) ICON_SCALE);
+            context.drawItem(new ItemStack(targetItem), 0, 0);
+            context.getMatrices().popMatrix();
+        }
+        curY += ICON_SIZE + 4;
+
+        // Item name
         Text itemName = ItemPool.getDisplayName(targetItem);
         context.drawText(this.textRenderer, itemName,
-                centerX - this.textRenderer.getWidth(itemName) / 2, nameY, 0xFFFFFF00, true);
+                centerX - this.textRenderer.getWidth(itemName) / 2, curY, 0xFFFFFF00, true);
+        curY += 10 + 4;
 
-        // Run history panels (skip if window too narrow)
+        // History toggle link
+        Text linkText = Text.literal(showHistory ? "< Back" : "History >");
+        int linkW = this.textRenderer.getWidth(linkText);
+        int linkX = centerX - linkW / 2;
+        boolean hovering = mouseX >= linkX && mouseX <= linkX + linkW
+                && mouseY >= curY && mouseY <= curY + 10;
+        int linkColor = hovering ? 0xFF88CCFF : 0xFF6699CC;
+        context.drawText(this.textRenderer, linkText, linkX, curY, linkColor, true);
+
+        // Store link bounds for click detection
+        historyLinkX = linkX;
+        historyLinkY = curY;
+        historyLinkW = linkW;
+        historyLinkH = 10;
+    }
+
+    private void renderHistoryArea(DrawContext context, int centerX, int areaY) {
         Identifier itemId = Registries.ITEM.getId(targetItem);
-        int panelGap = 16;
-        int neededWidth = ICON_SIZE + 2 * (PANEL_WIDTH + panelGap) + 40;
-        if (this.width >= neededWidth) {
-            int panelY = this.height / 2 - ICON_SIZE + 10;
-            int leftPanelX = centerX - ICON_SIZE / 2 - panelGap - PANEL_WIDTH;
-            int rightPanelX = centerX + ICON_SIZE / 2 + panelGap;
+        List<ResultStore.RunResult> lastRuns = ResultStore.getLastRuns(itemId, 3);
+        List<ResultStore.RunResult> topRuns = ResultStore.getTopRuns(itemId, 3);
 
-            List<ResultStore.RunResult> lastRuns = ResultStore.getLastRuns(itemId, 3);
-            List<ResultStore.RunResult> topRuns = ResultStore.getTopRuns(itemId, 3);
+        // Stack the two panels vertically, centered
+        int panelH = computePanelHeight(Math.max(lastRuns.size(), 1));
+        int gap = 4;
+        int totalPanelH = panelH * 2 + gap;
 
-            renderRunPanel(context, leftPanelX, panelY, "Last Three Runs", lastRuns);
-            renderRunPanel(context, rightPanelX, panelY, "Top Three Runs", topRuns);
+        // Center the panels in the icon area (64px)
+        int panelStartY = areaY + (ICON_SIZE - totalPanelH) / 2;
+        int panelX = centerX - PANEL_WIDTH / 2;
+
+        renderRunPanel(context, panelX, panelStartY, "Last Three Runs", lastRuns);
+        renderRunPanel(context, panelX, panelStartY + panelH + gap, "Top Three Runs", topRuns);
+    }
+
+    private int computePanelHeight(int entryCount) {
+        float scale = 0.75f;
+        int scaledLineHeight = (int) ((this.textRenderer.fontHeight + 2) * scale);
+        return PANEL_PADDING + scaledLineHeight + 2 + Math.max(entryCount, 1) * scaledLineHeight + PANEL_PADDING;
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (button == 0 && mouseX >= historyLinkX && mouseX <= historyLinkX + historyLinkW
+                && mouseY >= historyLinkY && mouseY <= historyLinkY + historyLinkH) {
+            showHistory = !showHistory;
+            return true;
         }
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     private void renderRunPanel(DrawContext context, int x, int y, String header,
