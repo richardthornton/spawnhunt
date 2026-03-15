@@ -30,6 +30,12 @@ public class SpawnHuntScreen extends Screen {
     private static final int PANEL_PADDING = 6;
     private static final int PANEL_BG = 0x80000000;
     private static final int PANEL_BORDER = 0x60444444;
+    // Vertical layout spacing (shared between init and render)
+    private static final int TEXT_H = 10;          // height of a single text line
+    private static final int GAP_SMALL = 4;        // gap after title, icon, item name
+    private static final int GAP_MEDIUM = 8;       // gap after subtitle, after button rows
+    private static final int GAP_PRE_BTN = 10;     // gap before button block
+    private static final int CHECKBOX_H = 20;
     private static final int TOTAL_HEIGHT = 196;
     private static final int BTN_W = 76;
     private static final int BTN_H = 20;
@@ -63,14 +69,15 @@ public class SpawnHuntScreen extends Screen {
     protected void init() {
         int centerX = this.width / 2;
 
-        // Vertical layout anchor: compute total content height and center it
-        // Title(10) + 4 + Subtitle(10) + 8 + Icon(64) + 4 + Name(10) + 4 + HistoryLink(10)
-        //   + 10 + ButtonRow1(20) + 4 + ButtonRow2(20) + 8 + Checkbox(20) = ~196
-        int totalHeight = TOTAL_HEIGHT;
-        int topY = (this.height - totalHeight) / 2;
+        int topY = (this.height - TOTAL_HEIGHT) / 2;
 
-        // Button positions: 2x2 grid centered
-        int btnBlockY = topY + 10 + 4 + 10 + 8 + ICON_SIZE + 4 + 10 + 4 + 10 + 10;
+        // Button Y: walk the same layout steps as render()
+        int btnBlockY = topY
+                + TEXT_H + GAP_SMALL          // title
+                + TEXT_H + GAP_MEDIUM         // subtitle
+                + ICON_SIZE + GAP_SMALL       // icon area
+                + TEXT_H + GAP_SMALL          // item name
+                + TEXT_H + GAP_PRE_BTN;       // history link
         int leftBtnX = centerX - BTN_W - BTN_GAP / 2;
         int rightBtnX = centerX + BTN_GAP / 2;
 
@@ -114,7 +121,7 @@ public class SpawnHuntScreen extends Screen {
         );
 
         // Hardcore checkbox — centered below buttons
-        int checkboxY = row2Y + BTN_H + 8;
+        int checkboxY = row2Y + BTN_H + GAP_MEDIUM;
         this.addDrawableChild(
                 CheckboxWidget.builder(Text.literal("Hardcore"), this.textRenderer)
                         .pos(centerX - 30, checkboxY)
@@ -132,21 +139,20 @@ public class SpawnHuntScreen extends Screen {
         super.render(context, mouseX, mouseY, delta);
 
         int centerX = this.width / 2;
-        int totalHeight = TOTAL_HEIGHT;
-        int topY = (this.height - totalHeight) / 2;
+        int topY = (this.height - TOTAL_HEIGHT) / 2;
         int curY = topY;
 
         // Title
         Text title = Text.literal("SpawnHunt");
         context.drawText(this.textRenderer, title,
                 centerX - this.textRenderer.getWidth(title) / 2, curY, 0xFFFFFFFF, true);
-        curY += 10 + 4;
+        curY += TEXT_H + GAP_SMALL;
 
         // Subtitle
         Text subtitle = Text.literal("Your target:");
         context.drawText(this.textRenderer, subtitle,
                 centerX - this.textRenderer.getWidth(subtitle) / 2, curY, 0xFFAAAAAA, true);
-        curY += 10 + 8;
+        curY += TEXT_H + GAP_MEDIUM;
 
         // Icon area (or history panels)
         int iconAreaY = curY;
@@ -163,20 +169,20 @@ public class SpawnHuntScreen extends Screen {
             context.drawItem(new ItemStack(targetItem), 0, 0);
             context.getMatrices().popMatrix();
         }
-        curY += ICON_SIZE + 4;
+        curY += ICON_SIZE + GAP_SMALL;
 
         // Item name
         Text itemName = ItemPool.getDisplayName(targetItem);
         context.drawText(this.textRenderer, itemName,
                 centerX - this.textRenderer.getWidth(itemName) / 2, curY, 0xFFFFFF00, true);
-        curY += 10 + 4;
+        curY += TEXT_H + GAP_SMALL;
 
         // History toggle link
         Text linkText = Text.literal(showHistory ? "< Back" : "History >");
         int linkW = this.textRenderer.getWidth(linkText);
         int linkX = centerX - linkW / 2;
         boolean hovering = mouseX >= linkX && mouseX <= linkX + linkW
-                && mouseY >= curY && mouseY <= curY + 10;
+                && mouseY >= curY && mouseY <= curY + TEXT_H;
         int linkColor = hovering ? 0xFF88CCFF : 0xFF6699CC;
         context.drawText(this.textRenderer, linkText, linkX, curY, linkColor, true);
 
@@ -184,7 +190,7 @@ public class SpawnHuntScreen extends Screen {
         historyLinkX = linkX;
         historyLinkY = curY;
         historyLinkW = linkW;
-        historyLinkH = 10;
+        historyLinkH = TEXT_H;
     }
 
     private void renderHistoryArea(DrawContext context, int centerX, int areaY) {
