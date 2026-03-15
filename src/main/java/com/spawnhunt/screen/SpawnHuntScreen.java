@@ -3,6 +3,7 @@ package com.spawnhunt.screen;
 import com.spawnhunt.data.HuntState;
 import com.spawnhunt.data.ItemPool;
 import com.spawnhunt.data.ResultStore;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.TitleScreen;
@@ -25,7 +26,6 @@ import java.util.Random;
 public class SpawnHuntScreen extends Screen {
     private static final int ICON_SCALE = 4;
     private static final int ICON_SIZE = 16 * ICON_SCALE; // 64px
-    private static final int PANEL_WIDTH = 120;
     private static final int PANEL_PADDING = 6;
     private static final int PANEL_BG = 0x80000000;
     private static final int PANEL_BORDER = 0x60444444;
@@ -190,17 +190,26 @@ public class SpawnHuntScreen extends Screen {
         List<ResultStore.RunResult> lastRuns = ResultStore.getLastRuns(itemId, 3);
         List<ResultStore.RunResult> topRuns = ResultStore.getTopRuns(itemId, 3);
 
-        // Stack the two panels vertically, centered
-        int panelH = computePanelHeight(Math.max(lastRuns.size(), 1));
+        String lastHeader = "Last Three Runs";
+        String topHeader = "Top Three Runs";
+        float scale = 0.75f;
+        int lastW = computePanelWidth(lastHeader, scale);
+        int topW = computePanelWidth(topHeader, scale);
+
         int gap = 4;
-        int totalPanelH = panelH * 2 + gap;
+        int totalW = lastW + gap + topW;
+        int panelH = computePanelHeight(Math.max(Math.max(lastRuns.size(), topRuns.size()), 1));
 
-        // Center the panels in the icon area (64px)
-        int panelStartY = areaY + (ICON_SIZE - totalPanelH) / 2;
-        int panelX = centerX - PANEL_WIDTH / 2;
+        // Center both panels side-by-side in the icon area
+        int panelY = areaY + (ICON_SIZE - panelH) / 2;
+        int leftX = centerX - totalW / 2;
 
-        renderRunPanel(context, panelX, panelStartY, "Last Three Runs", lastRuns);
-        renderRunPanel(context, panelX, panelStartY + panelH + gap, "Top Three Runs", topRuns);
+        renderRunPanel(context, leftX, panelY, lastHeader, lastRuns, lastW);
+        renderRunPanel(context, leftX + lastW + gap, panelY, topHeader, topRuns, topW);
+    }
+
+    private int computePanelWidth(String header, float scale) {
+        return (int) (this.textRenderer.getWidth(header) * scale) + PANEL_PADDING * 2;
     }
 
     private int computePanelHeight(int entryCount) {
@@ -210,24 +219,24 @@ public class SpawnHuntScreen extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button == 0 && mouseX >= historyLinkX && mouseX <= historyLinkX + historyLinkW
-                && mouseY >= historyLinkY && mouseY <= historyLinkY + historyLinkH) {
+    public boolean mouseClicked(Click click, boolean doubled) {
+        if (click.button() == 0 && click.x() >= historyLinkX && click.x() <= historyLinkX + historyLinkW
+                && click.y() >= historyLinkY && click.y() <= historyLinkY + historyLinkH) {
             showHistory = !showHistory;
             return true;
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(click, doubled);
     }
 
     private void renderRunPanel(DrawContext context, int x, int y, String header,
-                                List<ResultStore.RunResult> runs) {
+                                List<ResultStore.RunResult> runs, int panelW) {
         float scale = 0.75f;
         int scaledLineHeight = (int) ((this.textRenderer.fontHeight + 2) * scale);
         int panelH = PANEL_PADDING + scaledLineHeight + 2 + Math.max(runs.size(), 1) * scaledLineHeight + PANEL_PADDING;
 
         // Background + border
-        context.fill(x, y, x + PANEL_WIDTH, y + panelH, PANEL_BG);
-        drawPanelBorder(context, x, y, PANEL_WIDTH, panelH);
+        context.fill(x, y, x + panelW, y + panelH, PANEL_BG);
+        drawPanelBorder(context, x, y, panelW, panelH);
 
         // Header (scaled)
         context.getMatrices().pushMatrix();
