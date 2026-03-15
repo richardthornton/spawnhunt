@@ -97,9 +97,9 @@ public class ItemPool {
     private static final String MUSIC_DISC_PREFIX = "music_disc_";
 
     /**
-     * Returns a display name for the item. For music discs, returns the song
-     * description (e.g. "C418 - chirp") since getName() alone just returns
-     * "Music Disc" for all of them.
+     * Returns a display name for the item. For music discs, returns
+     * "Music Disc - {song}" (e.g. "Music Disc - chirp") since getName()
+     * alone just returns "Music Disc" for all of them.
      */
     public static Text getDisplayName(Item item) {
         Text cached = displayNameCache.get(item);
@@ -113,10 +113,7 @@ public class ItemPool {
 
         if (path.startsWith(MUSIC_DISC_PREFIX)) {
             String songId = path.substring(MUSIC_DISC_PREFIX.length());
-            String songDesc = Text.translatable("jukebox_song.minecraft." + songId).getString();
-            if (!songDesc.startsWith("jukebox_song.")) {
-                name = Text.literal(songDesc);
-            }
+            name = Text.literal("Music Disc - " + songId);
         }
 
         displayNameCache.put(item, name);
