@@ -26,6 +26,7 @@ import java.util.Random;
 public class SpawnHuntScreen extends Screen {
     private static final int ICON_SCALE = 4;
     private static final int ICON_SIZE = 16 * ICON_SCALE; // 64px
+    private static final float PANEL_SCALE = 0.75f;
     private static final int PANEL_PADDING = 6;
     private static final int PANEL_BG = 0x80000000;
     private static final int PANEL_BORDER = 0x60444444;
@@ -193,9 +194,8 @@ public class SpawnHuntScreen extends Screen {
 
         String lastHeader = "Last Three Runs";
         String topHeader = "Top Three Runs";
-        float scale = 0.75f;
-        int lastW = computePanelWidth(lastHeader, scale);
-        int topW = computePanelWidth(topHeader, scale);
+        int lastW = computePanelWidth(lastHeader);
+        int topW = computePanelWidth(topHeader);
 
         int gap = 4;
         int totalW = lastW + gap + topW;
@@ -209,13 +209,12 @@ public class SpawnHuntScreen extends Screen {
         renderRunPanel(context, leftX + lastW + gap, panelY, topHeader, topRuns, topW);
     }
 
-    private int computePanelWidth(String header, float scale) {
-        return (int) (this.textRenderer.getWidth(header) * scale) + PANEL_PADDING * 2;
+    private int computePanelWidth(String header) {
+        return (int) (this.textRenderer.getWidth(header) * PANEL_SCALE) + PANEL_PADDING * 2;
     }
 
     private int computePanelHeight(int entryCount) {
-        float scale = 0.75f;
-        int scaledLineHeight = (int) ((this.textRenderer.fontHeight + 2) * scale);
+        int scaledLineHeight = (int) ((this.textRenderer.fontHeight + 2) * PANEL_SCALE);
         return PANEL_PADDING + scaledLineHeight + 2 + Math.max(entryCount, 1) * scaledLineHeight + PANEL_PADDING;
     }
 
@@ -231,8 +230,7 @@ public class SpawnHuntScreen extends Screen {
 
     private void renderRunPanel(DrawContext context, int x, int y, String header,
                                 List<ResultStore.RunResult> runs, int panelW) {
-        float scale = 0.75f;
-        int scaledLineHeight = (int) ((this.textRenderer.fontHeight + 2) * scale);
+        int scaledLineHeight = (int) ((this.textRenderer.fontHeight + 2) * PANEL_SCALE);
         int panelH = PANEL_PADDING + scaledLineHeight + 2 + Math.max(runs.size(), 1) * scaledLineHeight + PANEL_PADDING;
 
         // Background + border
@@ -242,7 +240,7 @@ public class SpawnHuntScreen extends Screen {
         // Header (scaled)
         context.getMatrices().pushMatrix();
         context.getMatrices().translate((float) (x + PANEL_PADDING), (float) (y + PANEL_PADDING));
-        context.getMatrices().scale(scale, scale);
+        context.getMatrices().scale(PANEL_SCALE, PANEL_SCALE);
         context.drawText(this.textRenderer, header, 0, 0, 0xFFFFFFFF, true);
         context.getMatrices().popMatrix();
 
@@ -251,7 +249,7 @@ public class SpawnHuntScreen extends Screen {
         if (runs.isEmpty()) {
             context.getMatrices().pushMatrix();
             context.getMatrices().translate((float) (x + PANEL_PADDING), (float) entryY);
-            context.getMatrices().scale(scale, scale);
+            context.getMatrices().scale(PANEL_SCALE, PANEL_SCALE);
             context.drawText(this.textRenderer, "No runs yet", 0, 0, 0xFF888888, true);
             context.getMatrices().popMatrix();
         } else {
@@ -259,7 +257,7 @@ public class SpawnHuntScreen extends Screen {
                 String entry = (i + 1) + ". " + HuntState.formatTime(runs.get(i).timeMs);
                 context.getMatrices().pushMatrix();
                 context.getMatrices().translate((float) (x + PANEL_PADDING), (float) (entryY + i * scaledLineHeight));
-                context.getMatrices().scale(scale, scale);
+                context.getMatrices().scale(PANEL_SCALE, PANEL_SCALE);
                 context.drawText(this.textRenderer, entry, 0, 0, 0xFFDDDDDD, true);
                 context.getMatrices().popMatrix();
             }
