@@ -35,6 +35,8 @@ public class ItemPool {
             "knowledge_book",
 
             // Unobtainable in Survival
+            "test_block",
+            "test_instance_block",
             "bedrock",
             "end_portal_frame",
             "spawner",
