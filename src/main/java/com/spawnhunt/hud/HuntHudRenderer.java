@@ -17,7 +17,6 @@ public class HuntHudRenderer {
 
     private static final int TOP_MARGIN = 22;
     private static final int LINE_GAP = 2;
-    private static final float TIMER_SCALE = 1.0f;
     private static final float WIN_TIMER_SCALE = 1.5f;
     private static final float BEST_SCALE = 0.75f;
     private static final int BEST_COLOR = 0xFFAAFFAA;
@@ -59,22 +58,27 @@ public class HuntHudRenderer {
         // Timer — centred below name, larger on win
         long ms = won ? HuntState.getFinalTimeMs() : HuntState.getAccumulatedMs();
         String timeStr = HuntState.formatTime(ms);
-        float timerScale = won ? WIN_TIMER_SCALE : TIMER_SCALE;
-        int timerWidth = (int) (textRenderer.getWidth(timeStr) * timerScale);
-        context.getMatrices().pushMatrix();
-        context.getMatrices().translate((float) (centreX - timerWidth / 2), (float) y);
-        context.getMatrices().scale(timerScale, timerScale);
-        context.drawText(textRenderer, timeStr, 0, 0, 0xFFFFFFFF, true);
-        context.getMatrices().popMatrix();
-        y += (int) (textRenderer.fontHeight * timerScale) + LINE_GAP;
+        if (won) {
+            float timerWidthF = textRenderer.getWidth(timeStr) * WIN_TIMER_SCALE;
+            context.getMatrices().pushMatrix();
+            context.getMatrices().translate(centreX - timerWidthF / 2f, (float) y);
+            context.getMatrices().scale(WIN_TIMER_SCALE, WIN_TIMER_SCALE);
+            context.drawText(textRenderer, timeStr, 0, 0, 0xFFFFFFFF, true);
+            context.getMatrices().popMatrix();
+            y += (int) (textRenderer.fontHeight * WIN_TIMER_SCALE) + LINE_GAP;
+        } else {
+            int timerWidth = textRenderer.getWidth(timeStr);
+            context.drawText(textRenderer, timeStr, centreX - timerWidth / 2, y, 0xFFFFFFFF, true);
+            y += textRenderer.fontHeight + LINE_GAP;
+        }
 
         // Best time — centred below timer
         long bestTimeMs = ResultStore.getBestTime(targetId);
         if (bestTimeMs >= 0) {
             String bestStr = "Best: " + HuntState.formatTime(bestTimeMs);
-            int bestWidth = (int) (textRenderer.getWidth(bestStr) * BEST_SCALE);
+            float bestWidthF = textRenderer.getWidth(bestStr) * BEST_SCALE;
             context.getMatrices().pushMatrix();
-            context.getMatrices().translate((float) (centreX - bestWidth / 2), (float) y);
+            context.getMatrices().translate(centreX - bestWidthF / 2f, (float) y);
             context.getMatrices().scale(BEST_SCALE, BEST_SCALE);
             context.drawText(textRenderer, bestStr, 0, 0, BEST_COLOR, true);
             context.getMatrices().popMatrix();
