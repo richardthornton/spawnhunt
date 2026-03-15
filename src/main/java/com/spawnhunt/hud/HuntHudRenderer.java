@@ -15,16 +15,12 @@ import net.minecraft.util.Identifier;
 
 public class HuntHudRenderer {
 
-    private static final int PADDING = 4;
-    private static final int GAP = 2;
-    private static final int FIXED_BOX_WIDTH = 160;
-    private static final int BOSS_BAR_CLEARANCE = 30;
+    private static final int TOP_MARGIN = 22;
+    private static final int LINE_GAP = 2;
     private static final float TIMER_SCALE = 1.0f;
+    private static final float WIN_TIMER_SCALE = 1.5f;
     private static final float BEST_SCALE = 0.75f;
     private static final int BEST_COLOR = 0xFFAAFFAA;
-    private static final int BG_COLOR = 0xCC000000;
-    private static final int BORDER_COLOR = 0x40FFFFFF;
-    private static final int WIN_BORDER_COLOR = 0xC055FF55;
     private static final int WIN_NAME_COLOR = 0xFF55FF55;
 
     public static void render(DrawContext context, RenderTickCounter tickCounter) {
@@ -44,68 +40,44 @@ public class HuntHudRenderer {
         Item item = Registries.ITEM.get(targetId);
         ItemStack stack = new ItemStack(item);
         Text itemName = ItemPool.getDisplayName(item);
-        int nameWidth = textRenderer.getWidth(itemName);
-
-        // Timer text
-        long ms = HuntState.isWon() ? HuntState.getFinalTimeMs() : HuntState.getAccumulatedMs();
-        String timeStr = HuntState.formatTime(ms);
-        int scaledTimerHeight = (int) (textRenderer.fontHeight * TIMER_SCALE);
-        int timerWidth = (int) (textRenderer.getWidth(timeStr) * TIMER_SCALE);
-
-        // Best time (from previous runs)
-        long bestTimeMs = ResultStore.getBestTime(targetId);
-        boolean showBest = bestTimeMs >= 0;
-        int bestLineHeight = showBest ? (int) (textRenderer.fontHeight * BEST_SCALE) + 1 : 0;
-        String bestStr = showBest ? "Best: " + HuntState.formatTime(bestTimeMs) : "";
-        int bestWidth = showBest ? (int) (textRenderer.getWidth(bestStr) * BEST_SCALE) : 0;
-
-        // Box sizing: fixed width, centred horizontally, below boss bar area
-        int screenWidth = MinecraftClient.getInstance().getWindow().getScaledWidth();
-        int boxW = FIXED_BOX_WIDTH;
-        int boxX = (screenWidth - boxW) / 2;
-        int boxY = BOSS_BAR_CLEARANCE;
-        int textStartX = PADDING + 16 + PADDING;
-        // nameY offset from boxY is: PADDING + (16 - fontH) / 2
-        // timer starts at: nameY + fontH + 1, height is scaledTimerHeight
-        int nameOffsetY = PADDING + (16 - textRenderer.fontHeight) / 2;
-        int boxH = nameOffsetY + textRenderer.fontHeight + 1 + scaledTimerHeight + bestLineHeight + PADDING;
-
-        // Background + border (green on win)
         boolean won = HuntState.isWon();
-        context.fill(boxX, boxY, boxX + boxW, boxY + boxH, BG_COLOR);
-        drawBorder(context, boxX, boxY, boxW, boxH, won ? WIN_BORDER_COLOR : BORDER_COLOR);
 
-        // Item icon
-        context.drawItem(stack, boxX + PADDING, boxY + PADDING);
+        int screenWidth = MinecraftClient.getInstance().getWindow().getScaledWidth();
+        int centreX = screenWidth / 2;
+        int y = TOP_MARGIN;
 
-        // Item name (vertically centered with the 16px icon, green on win)
-        int nameY = boxY + PADDING + (16 - textRenderer.fontHeight) / 2;
+        // Item icon — centred at top, pinned to screen edge
+        context.drawItem(stack, centreX - 8, y);
+        y += 16 + LINE_GAP;
+
+        // Item name — centred below icon
+        int nameWidth = textRenderer.getWidth(itemName);
         context.drawText(textRenderer, itemName,
-                boxX + PADDING + 16 + PADDING, nameY, won ? WIN_NAME_COLOR : 0xFFFFFFFF, true);
+                centreX - nameWidth / 2, y, won ? WIN_NAME_COLOR : 0xFFFFFFFF, true);
+        y += textRenderer.fontHeight + LINE_GAP;
 
-        // Timer just below the block name text
-        int timerY = nameY + textRenderer.fontHeight + 1;
+        // Timer — centred below name, larger on win
+        long ms = won ? HuntState.getFinalTimeMs() : HuntState.getAccumulatedMs();
+        String timeStr = HuntState.formatTime(ms);
+        float timerScale = won ? WIN_TIMER_SCALE : TIMER_SCALE;
+        int timerWidth = (int) (textRenderer.getWidth(timeStr) * timerScale);
         context.getMatrices().pushMatrix();
-        context.getMatrices().translate((float) (boxX + textStartX), (float) timerY);
-        context.getMatrices().scale(TIMER_SCALE, TIMER_SCALE);
+        context.getMatrices().translate((float) (centreX - timerWidth / 2), (float) y);
+        context.getMatrices().scale(timerScale, timerScale);
         context.drawText(textRenderer, timeStr, 0, 0, 0xFFFFFFFF, true);
         context.getMatrices().popMatrix();
+        y += (int) (textRenderer.fontHeight * timerScale) + LINE_GAP;
 
-        // Best time below timer
-        if (showBest) {
-            int bestY = timerY + scaledTimerHeight + 1;
+        // Best time — centred below timer
+        long bestTimeMs = ResultStore.getBestTime(targetId);
+        if (bestTimeMs >= 0) {
+            String bestStr = "Best: " + HuntState.formatTime(bestTimeMs);
+            int bestWidth = (int) (textRenderer.getWidth(bestStr) * BEST_SCALE);
             context.getMatrices().pushMatrix();
-            context.getMatrices().translate((float) (boxX + textStartX), (float) bestY);
+            context.getMatrices().translate((float) (centreX - bestWidth / 2), (float) y);
             context.getMatrices().scale(BEST_SCALE, BEST_SCALE);
             context.drawText(textRenderer, bestStr, 0, 0, BEST_COLOR, true);
             context.getMatrices().popMatrix();
         }
-    }
-
-    private static void drawBorder(DrawContext context, int x, int y, int w, int h, int color) {
-        context.fill(x, y, x + w, y + 1, color);         // top
-        context.fill(x, y + h - 1, x + w, y + h, color); // bottom
-        context.fill(x, y, x + 1, y + h, color);         // left
-        context.fill(x + w - 1, y, x + w, y + h, color); // right
     }
 }
