@@ -29,6 +29,7 @@ public class SpawnHuntScreen extends Screen {
     private static final int PANEL_PADDING = 6;
     private static final int PANEL_BG = 0x80000000;
     private static final int PANEL_BORDER = 0x60444444;
+    private static final int TOTAL_HEIGHT = 196;
     private static final int BTN_W = 76;
     private static final int BTN_H = 20;
     private static final int BTN_GAP = 4;
@@ -64,7 +65,7 @@ public class SpawnHuntScreen extends Screen {
         // Vertical layout anchor: compute total content height and center it
         // Title(10) + 4 + Subtitle(10) + 8 + Icon(64) + 4 + Name(10) + 4 + HistoryLink(10)
         //   + 10 + ButtonRow1(20) + 4 + ButtonRow2(20) + 8 + Checkbox(20) = ~196
-        int totalHeight = 196;
+        int totalHeight = TOTAL_HEIGHT;
         int topY = (this.height - totalHeight) / 2;
 
         // Button positions: 2x2 grid centered
@@ -130,7 +131,7 @@ public class SpawnHuntScreen extends Screen {
         super.render(context, mouseX, mouseY, delta);
 
         int centerX = this.width / 2;
-        int totalHeight = 196;
+        int totalHeight = TOTAL_HEIGHT;
         int topY = (this.height - totalHeight) / 2;
         int curY = topY;
 
