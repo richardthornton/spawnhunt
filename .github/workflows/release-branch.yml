@@ -1,0 +1,44 @@
+name: Set Release Version
+
+on:
+  push:
+    branches: ['release/**']
+
+jobs:
+  set-version:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract version from branch name
+        id: version
+        run: |
+          VERSION="${GITHUB_REF_NAME#release/}"
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Branch name must follow release/X.Y.Z format, got: $VERSION"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Update mod_version in gradle.properties
+        run: |
+          sed -i "s/^mod_version=.*/mod_version=${{ steps.version.outputs.version }}/" gradle.properties
+
+      - name: Add version row to CLAUDE.md
+        run: |
+          DATE=$(date -u +%Y-%m-%d)
+          VERSION="${{ steps.version.outputs.version }}"
+          # Insert new row after the table header separator line
+          sed -i "/^|---------|------------|/a | $VERSION | $DATE |  |" CLAUDE.md
+
+      - name: Commit version bump
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add gradle.properties CLAUDE.md
+          git diff --cached --quiet && echo "No changes to commit" && exit 0
+          git commit -m "Set version to ${{ steps.version.outputs.version }}"
+          git push
