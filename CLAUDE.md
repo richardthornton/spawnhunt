@@ -143,6 +143,7 @@ Uses [SemVer](https://semver.org/). Version is set in `gradle.properties` (`mod_
 | Version | Date       | Notes                                    |
 |---------|------------|------------------------------------------|
 | 2.0.0 | 2026-03-16 |  |
+| 2.0.0 | 2026-03-16 |  |
 | 2.0.0 | 2026-03-16 | Multiplayer support: server commands, HUD sync, vanilla client action bar |
 | 1.3.0 | 2026-03-15 | HUD redesign, vertical menu layout, music disc naming, item pool fixes |
 | 1.2.0   | 2026-03-12 | Music disc song names, display name caching |
