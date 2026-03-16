@@ -68,7 +68,9 @@ public class SpawnHuntCommand {
             context.getSource().sendError(Text.literal("A hunt is already active! Use /spawnhunt stop first."));
             return 0;
         }
-        return resolveAndStart(context);
+        Item item = resolveItem(context);
+        if (item == null) return 0;
+        return doStart(context, item);
     }
 
     private static int stop(CommandContext<ServerCommandSource> context) {
@@ -93,28 +95,28 @@ public class SpawnHuntCommand {
     }
 
     private static int restartSpecific(CommandContext<ServerCommandSource> context) {
-        return resolveAndStart(context);
+        Item item = resolveItem(context);
+        if (item == null) return 0;
+        doStop(context);
+        return doStart(context, item);
     }
 
-    private static int resolveAndStart(CommandContext<ServerCommandSource> context) {
+    private static Item resolveItem(CommandContext<ServerCommandSource> context) {
         Identifier itemId = IdentifierArgumentType.getIdentifier(context, "item");
 
         if (!Registries.ITEM.containsId(itemId)) {
             context.getSource().sendError(Text.literal("Unknown item: " + itemId));
-            return 0;
+            return null;
         }
 
         Item item = Registries.ITEM.get(itemId);
 
         if (!ItemPool.getPool().contains(item)) {
             context.getSource().sendError(Text.literal("Item not in the SpawnHunt pool: " + itemId));
-            return 0;
+            return null;
         }
 
-        if (ServerHuntState.isActive()) {
-            doStop(context);
-        }
-        return doStart(context, item);
+        return item;
     }
 
     private static int doStart(CommandContext<ServerCommandSource> context, Item item) {
