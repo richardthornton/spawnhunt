@@ -1,7 +1,8 @@
 # SpawnHunt
 
-A Fabric client-side mod for Minecraft Java Edition 1.21.11.
+A Fabric mod for Minecraft Java Edition 1.21.11.
 Speedrun-style scavenger hunt: find and collect a random survival-obtainable block as fast as possible.
+Supports both singleplayer (client-side) and multiplayer (server-side commands + HUD sync).
 
 ## Testing Environment
 
@@ -14,19 +15,29 @@ Speedrun-style scavenger hunt: find and collect a random survival-obtainable blo
 
 ```
 com.spawnhunt
-├── SpawnHuntMod.java              // Entrypoint (ClientModInitializer)
+├── SpawnHuntMod.java              // Client entrypoint (ClientModInitializer)
+├── SpawnHuntCommon.java           // Common entrypoint (ModInitializer) — packets, commands, server tick
 ├── data/
 │   ├── ItemPool.java              // Survival-obtainable item registry & random selection
-│   ├── HuntState.java            // Active hunt state (target, timer, win flag)
+│   ├── HuntState.java            // Singleplayer hunt state (target, timer, win flag)
+│   ├── ServerHuntState.java      // Server-authoritative multiplayer hunt state
 │   └── ResultStore.java          // Persisted run results (last/top times per item)
+├── command/
+│   └── SpawnHuntCommand.java      // /spawnhunt command tree (Brigadier)
+├── network/
+│   ├── SpawnHuntPayloads.java     // Payload ID constants + registration
+│   ├── HuntSyncS2CPayload.java   // Periodic state sync (server -> client)
+│   ├── HuntWinS2CPayload.java    // Win announcement (server -> client)
+│   └── ClientHuntState.java      // Client-side mirror of server state
 ├── screen/
 │   ├── SpawnHuntScreen.java       // Item selection GUI (Cancel / List / Reroll / Start)
 │   └── ItemChooserScreen.java     // Searchable item list picker (Back / Select)
 ├── hud/
-│   └── HuntHudRenderer.java      // In-game HUD (timer + target icon/name, green border/name on win)
+│   └── HuntHudRenderer.java      // In-game HUD (dual source: SP HuntState / MP ClientHuntState)
 ├── event/
-│   ├── InventoryListener.java     // Detects target block entering inventory
-│   └── WorldLifecycleHandler.java // Resets hunt state on world exit
+│   ├── InventoryListener.java     // Detects target block entering inventory (singleplayer)
+│   ├── WorldLifecycleHandler.java // Resets hunt state on world exit
+│   └── ServerHuntManager.java     // Server tick: inventory scan, timer broadcast, win detection
 └── mixin/
     ├── TitleScreenMixin.java      // Injects "SpawnHunt" button into main menu
     └── CreateWorldScreenMixin.java // Auto-configures and triggers world creation
@@ -101,13 +112,24 @@ JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-21.0.10.7-hotspot" ./gradlew bu
 - [x] 9.4 Playtesting (easy + hard targets, timer accuracy)
 - [x] 9.5 Build & distribute (final .jar, clean install test)
 
+### Phase M — Multiplayer Support
+- [x] M1 Common infrastructure (SpawnHuntCommon entrypoint, payload registration, fabric.mod.json)
+- [x] M2 Server state + commands (ServerHuntState, /spawnhunt command tree)
+- [x] M3 Server tick handler (inventory scan, mod client sync, vanilla action bar, win detection)
+- [x] M4 Client integration (ClientHuntState, packet receivers, dual-source HUD)
+- [x] M5 Polish (seconds-only timer for MP, win timer fix, action bar cleanup)
+
 ## Key Design Decisions
 
 - **State is not persisted** — exiting the world ends the hunt. Crash = hunt over.
 - **Item pool** uses tag-and-filter: start with all registry items, filter survival-obtainables, exclude unobtainables via a static exclusion set.
 - **Win state** — no separate overlay; HUD border and item name turn green, victory sound plays.
-- **Timer** uses delta-accumulation (not start-time subtraction) to avoid drift across pause/unpause.
+- **Singleplayer timer** uses delta-accumulation (not start-time subtraction) to avoid drift across pause/unpause.
+- **Multiplayer timer** uses server wall-clock (no pause concept); displayed in mm:ss format (no milliseconds).
 - **Inventory scanning** is trivially fast (36 slots + armor + offhand per tick).
+- **Two separate state paths** — singleplayer uses `HuntState` (client static), multiplayer uses `ServerHuntState` (server) synced to `ClientHuntState` (client mirror). No shared mutable state.
+- **Vanilla client support** — players without the mod see action bar messages during active hunts and chat messages for start/stop/win events.
+- **Multiplayer commands** require OP level 2 (GAMEMASTERS); `/spawnhunt status` is available to all players.
 
 ## Key Risks
 
@@ -120,7 +142,7 @@ Uses [SemVer](https://semver.org/). Version is set in `gradle.properties` (`mod_
 
 | Version | Date       | Notes                                    |
 |---------|------------|------------------------------------------|
-| 1.3.0 | 2026-03-15 |  |
+| 1.4.0 | 2026-03-16 | Multiplayer support: server commands, HUD sync, vanilla client action bar |
 | 1.3.0 | 2026-03-15 | HUD redesign, vertical menu layout, music disc naming, item pool fixes |
 | 1.2.0   | 2026-03-12 | Music disc song names, display name caching |
 | 1.1.0   | 2026-02-26 | UI polish, win state rework, world naming   |

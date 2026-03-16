@@ -7,8 +7,11 @@
   "authors": [],
   "contact": {},
   "license": "MIT",
-  "environment": "client",
+  "environment": "*",
   "entrypoints": {
+    "main": [
+      "com.spawnhunt.SpawnHuntCommon"
+    ],
     "client": [
       "com.spawnhunt.SpawnHuntMod"
     ]
