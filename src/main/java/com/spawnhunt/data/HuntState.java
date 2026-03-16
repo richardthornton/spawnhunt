@@ -72,4 +72,11 @@ public class HuntState {
         long millis = ms % 1000;
         return String.format("%02d:%02d.%03d", minutes, seconds, millis);
     }
+
+    public static String formatTimeSeconds(long ms) {
+        long totalSeconds = ms / 1000;
+        long minutes = totalSeconds / 60;
+        long seconds = totalSeconds % 60;
+        return String.format("%02d:%02d", minutes, seconds);
+    }
 }

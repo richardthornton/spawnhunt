@@ -1,8 +1,10 @@
 # SpawnHunt
 
-**SpawnHunt** is a client-side Fabric mod that turns Minecraft into a speedrun scavenger hunt. You're given a random survival-obtainable item — collect it in a fresh world as fast as you can.
+**SpawnHunt** is a Fabric mod that turns Minecraft into a speedrun scavenger hunt. You're given a random survival-obtainable item — collect it as fast as you can. Play solo in a fresh world or compete with friends on a server.
 
 ## How It Works
+
+### Singleplayer
 
 1. Click **SpawnHunt** on the title screen
 2. You're shown a random target item — **Reroll** for a new one, or pick from the full **List**
@@ -10,13 +12,20 @@
 4. Find and collect the target item as fast as possible
 5. Your time is tracked, and your best runs are saved per item
 
+### Multiplayer
+
+1. Install SpawnHunt on your Fabric server (players don't need the mod installed)
+2. An OP runs `/spawnhunt start random` or `/spawnhunt start <item>`
+3. All players race to find the target item first
+4. Players with the mod see a rich HUD; players without see action bar messages
+5. The first player to collect the item wins
+
 ## Features
 
 - **400+ target items** — every survival-obtainable item in the game
-- **Built-in timer** — pause-aware, displayed in the HUD alongside your target
-- **Run history** — tracks your last three and top three times for each item
-- **Hardcore mode** — optional toggle for an extra challenge
-- **Zero setup** — worlds are created automatically with a single click
+- **Singleplayer** — built-in timer with pause awareness, run history, hardcore mode
+- **Multiplayer** — server commands, automatic inventory scanning, works with vanilla clients
+- **Zero setup** — singleplayer worlds created with a single click; multiplayer via one command
 
 ## Requirements
 
@@ -26,9 +35,27 @@
 
 ## Installation
 
+### Client (singleplayer + enhanced multiplayer HUD)
 1. Install Fabric Loader and Fabric API for Minecraft 1.21.11
 2. Drop the `spawnhunt` jar into your `mods` folder
 3. Launch the game — the **SpawnHunt** button appears on the title screen
+
+### Server (multiplayer)
+1. Install Fabric Loader and Fabric API on your server
+2. Drop the `spawnhunt` jar into the server's `mods` folder
+3. Start the server — `/spawnhunt` commands are available to OPs
+
+Players **do not** need the mod installed to participate. They'll see the hunt via action bar messages and chat. Players with the mod get a richer HUD experience.
+
+## Commands
+
+| Command | Permission | Description |
+|---------|-----------|-------------|
+| `/spawnhunt start random` | OP | Start a hunt with a random item |
+| `/spawnhunt start <item>` | OP | Start a hunt with a specific item (tab-completable) |
+| `/spawnhunt stop` | OP | Cancel the current hunt |
+| `/spawnhunt restart [item]` | OP | Stop and start a new hunt |
+| `/spawnhunt status` | Everyone | Show current hunt info |
 
 ## Community & Support
 

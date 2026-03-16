@@ -2,6 +2,7 @@ package com.spawnhunt.event;
 
 import com.spawnhunt.SpawnHuntMod;
 import com.spawnhunt.data.HuntState;
+import com.spawnhunt.network.ClientHuntState;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 
 public class WorldLifecycleHandler {
@@ -12,6 +13,7 @@ public class WorldLifecycleHandler {
                 SpawnHuntMod.LOGGER.info("SpawnHunt: hunt ended (disconnected from world)");
                 HuntState.reset();
             }
+            ClientHuntState.reset();
         });
     }
 }
