@@ -106,8 +106,9 @@ public class ServerHuntManager {
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
             if (ServerPlayNetworking.canSend(player, HuntWinS2CPayload.ID)) {
                 ServerPlayNetworking.send(player, winPayload);
+            } else {
+                player.playSound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
             }
-            player.playSound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
         }
 
         // Send final sync to mod clients

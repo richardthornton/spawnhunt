@@ -2,6 +2,7 @@ package com.spawnhunt.command;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.spawnhunt.data.ItemPool;
 import com.spawnhunt.data.HuntState;
 import com.spawnhunt.data.ServerHuntState;
@@ -17,11 +18,20 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class SpawnHuntCommand {
 
-    private static final Random RANDOM = new Random();
+    private static final SuggestionProvider<ServerCommandSource> ITEM_SUGGESTIONS = (context, builder) -> {
+        String remaining = builder.getRemaining().toLowerCase();
+        for (Item item : ItemPool.getPool()) {
+            String id = Registries.ITEM.getId(item).toString();
+            if (id.startsWith(remaining) || id.startsWith("minecraft:" + remaining)) {
+                builder.suggest(id);
+            }
+        }
+        return builder.buildFuture();
+    };
 
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(CommandManager.literal("spawnhunt")
@@ -30,16 +40,7 @@ public class SpawnHuntCommand {
                         .then(CommandManager.literal("random")
                                 .executes(SpawnHuntCommand::startRandom))
                         .then(CommandManager.argument("item", IdentifierArgumentType.identifier())
-                                .suggests((context, builder) -> {
-                                    String remaining = builder.getRemaining().toLowerCase();
-                                    for (Item item : ItemPool.getPool()) {
-                                        String id = Registries.ITEM.getId(item).toString();
-                                        if (id.startsWith(remaining) || id.startsWith("minecraft:" + remaining)) {
-                                            builder.suggest(id);
-                                        }
-                                    }
-                                    return builder.buildFuture();
-                                })
+                                .suggests(ITEM_SUGGESTIONS)
                                 .executes(SpawnHuntCommand::startSpecific)))
                 .then(CommandManager.literal("stop")
                         .requires(source -> source.getPermissions().hasPermission(new Permission.Level(PermissionLevel.GAMEMASTERS)))
@@ -48,16 +49,7 @@ public class SpawnHuntCommand {
                         .requires(source -> source.getPermissions().hasPermission(new Permission.Level(PermissionLevel.GAMEMASTERS)))
                         .executes(SpawnHuntCommand::restartRandom)
                         .then(CommandManager.argument("item", IdentifierArgumentType.identifier())
-                                .suggests((context, builder) -> {
-                                    String remaining = builder.getRemaining().toLowerCase();
-                                    for (Item item : ItemPool.getPool()) {
-                                        String id = Registries.ITEM.getId(item).toString();
-                                        if (id.startsWith(remaining) || id.startsWith("minecraft:" + remaining)) {
-                                            builder.suggest(id);
-                                        }
-                                    }
-                                    return builder.buildFuture();
-                                })
+                                .suggests(ITEM_SUGGESTIONS)
                                 .executes(SpawnHuntCommand::restartSpecific)))
                 .then(CommandManager.literal("status")
                         .executes(SpawnHuntCommand::status)));
@@ -68,19 +60,7 @@ public class SpawnHuntCommand {
             context.getSource().sendError(Text.literal("A hunt is already active! Use /spawnhunt stop first."));
             return 0;
         }
-
-        Item item = ItemPool.getRandomItem(RANDOM);
-        Identifier itemId = Registries.ITEM.getId(item);
-        ServerHuntState.start(itemId);
-
-        Text itemName = ItemPool.getDisplayName(item);
-        Text message = Text.empty()
-                .append(Text.literal("[SpawnHunt] ").formatted(Formatting.GOLD))
-                .append(Text.literal("Hunt started! Find: ").formatted(Formatting.YELLOW))
-                .append(Text.literal(itemName.getString()).formatted(Formatting.AQUA));
-
-        ServerHuntManager.broadcastMessage(context.getSource().getServer(), message);
-        return 1;
+        return doStart(context, ItemPool.getRandomItem(ThreadLocalRandom.current()));
     }
 
     private static int startSpecific(CommandContext<ServerCommandSource> context) {
@@ -88,25 +68,7 @@ public class SpawnHuntCommand {
             context.getSource().sendError(Text.literal("A hunt is already active! Use /spawnhunt stop first."));
             return 0;
         }
-
-        Identifier itemId = IdentifierArgumentType.getIdentifier(context, "item");
-        Item item = Registries.ITEM.get(itemId);
-
-        if (!ItemPool.getPool().contains(item)) {
-            context.getSource().sendError(Text.literal("Item not in the SpawnHunt pool: " + itemId));
-            return 0;
-        }
-
-        ServerHuntState.start(itemId);
-
-        Text itemName = ItemPool.getDisplayName(item);
-        Text message = Text.empty()
-                .append(Text.literal("[SpawnHunt] ").formatted(Formatting.GOLD))
-                .append(Text.literal("Hunt started! Find: ").formatted(Formatting.YELLOW))
-                .append(Text.literal(itemName.getString()).formatted(Formatting.AQUA));
-
-        ServerHuntManager.broadcastMessage(context.getSource().getServer(), message);
-        return 1;
+        return resolveAndStart(context);
     }
 
     private static int stop(CommandContext<ServerCommandSource> context) {
@@ -115,37 +77,33 @@ public class SpawnHuntCommand {
             return 0;
         }
 
-        ServerHuntState.stop();
+        doStop(context);
 
         Text message = Text.empty()
                 .append(Text.literal("[SpawnHunt] ").formatted(Formatting.GOLD))
                 .append(Text.literal("Hunt stopped.").formatted(Formatting.RED));
 
         ServerHuntManager.broadcastMessage(context.getSource().getServer(), message);
-        ServerHuntManager.sendStopSync(context.getSource().getServer());
         return 1;
     }
 
     private static int restartRandom(CommandContext<ServerCommandSource> context) {
-        ServerHuntState.stop();
-        ServerHuntManager.sendStopSync(context.getSource().getServer());
-
-        Item item = ItemPool.getRandomItem(RANDOM);
-        Identifier itemId = Registries.ITEM.getId(item);
-        ServerHuntState.start(itemId);
-
-        Text itemName = ItemPool.getDisplayName(item);
-        Text message = Text.empty()
-                .append(Text.literal("[SpawnHunt] ").formatted(Formatting.GOLD))
-                .append(Text.literal("New hunt! Find: ").formatted(Formatting.YELLOW))
-                .append(Text.literal(itemName.getString()).formatted(Formatting.AQUA));
-
-        ServerHuntManager.broadcastMessage(context.getSource().getServer(), message);
-        return 1;
+        doStop(context);
+        return doStart(context, ItemPool.getRandomItem(ThreadLocalRandom.current()));
     }
 
     private static int restartSpecific(CommandContext<ServerCommandSource> context) {
+        return resolveAndStart(context);
+    }
+
+    private static int resolveAndStart(CommandContext<ServerCommandSource> context) {
         Identifier itemId = IdentifierArgumentType.getIdentifier(context, "item");
+
+        if (!Registries.ITEM.containsId(itemId)) {
+            context.getSource().sendError(Text.literal("Unknown item: " + itemId));
+            return 0;
+        }
+
         Item item = Registries.ITEM.get(itemId);
 
         if (!ItemPool.getPool().contains(item)) {
@@ -153,18 +111,29 @@ public class SpawnHuntCommand {
             return 0;
         }
 
-        ServerHuntState.stop();
-        ServerHuntManager.sendStopSync(context.getSource().getServer());
+        if (ServerHuntState.isActive()) {
+            doStop(context);
+        }
+        return doStart(context, item);
+    }
+
+    private static int doStart(CommandContext<ServerCommandSource> context, Item item) {
+        Identifier itemId = Registries.ITEM.getId(item);
         ServerHuntState.start(itemId);
 
         Text itemName = ItemPool.getDisplayName(item);
         Text message = Text.empty()
                 .append(Text.literal("[SpawnHunt] ").formatted(Formatting.GOLD))
-                .append(Text.literal("New hunt! Find: ").formatted(Formatting.YELLOW))
+                .append(Text.literal("Hunt started! Find: ").formatted(Formatting.YELLOW))
                 .append(Text.literal(itemName.getString()).formatted(Formatting.AQUA));
 
         ServerHuntManager.broadcastMessage(context.getSource().getServer(), message);
         return 1;
+    }
+
+    private static void doStop(CommandContext<ServerCommandSource> context) {
+        ServerHuntState.stop();
+        ServerHuntManager.sendStopSync(context.getSource().getServer());
     }
 
     private static int status(CommandContext<ServerCommandSource> context) {

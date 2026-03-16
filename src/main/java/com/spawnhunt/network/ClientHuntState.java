@@ -16,7 +16,8 @@ public class ClientHuntState {
 
     public static void update(HuntSyncS2CPayload payload) {
         active = payload.active();
-        targetItem = payload.active() ? Identifier.of(payload.targetItemId()) : null;
+        targetItem = (payload.active() && !payload.targetItemId().isEmpty())
+                ? Identifier.of(payload.targetItemId()) : null;
         elapsedMs = payload.elapsedMs();
         won = payload.won();
         winnerName = payload.winnerName();

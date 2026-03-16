@@ -18,9 +18,9 @@ public record HuntWinS2CPayload(
         @Override
         public HuntWinS2CPayload decode(RegistryByteBuf buf) {
             return new HuntWinS2CPayload(
-                    buf.readString(),
+                    buf.readString(64),
                     buf.readLong(),
-                    buf.readString()
+                    buf.readString(256)
             );
         }
 

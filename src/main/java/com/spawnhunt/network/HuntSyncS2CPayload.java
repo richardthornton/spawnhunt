@@ -22,10 +22,10 @@ public record HuntSyncS2CPayload(
         public HuntSyncS2CPayload decode(RegistryByteBuf buf) {
             return new HuntSyncS2CPayload(
                     buf.readBoolean(),
-                    buf.readString(),
+                    buf.readString(256),
                     buf.readLong(),
                     buf.readBoolean(),
-                    buf.readString(),
+                    buf.readString(64),
                     buf.readLong()
             );
         }
