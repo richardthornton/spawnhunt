@@ -2,6 +2,7 @@ package com.spawnhunt.hud;
 
 import com.spawnhunt.data.HuntState;
 import com.spawnhunt.data.ResultStore;
+import com.spawnhunt.network.ClientHuntState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -23,29 +24,45 @@ public class HuntHudRenderer {
     private static final int WIN_NAME_COLOR = 0xFF55FF55;
 
     public static void render(DrawContext context, RenderTickCounter tickCounter) {
-        if (!HuntState.isActive()) return;
-
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.player == null) return;
 
-        TextRenderer textRenderer = client.textRenderer;
-        renderHudBlock(context, textRenderer);
+        // Multiplayer (server-authoritative) takes priority
+        if (ClientHuntState.isActive()) {
+            renderHud(context, client.textRenderer,
+                    ClientHuntState.getTargetItem(),
+                    ClientHuntState.isWon(),
+                    ClientHuntState.isWon() ? ClientHuntState.getFinalTimeMs() : ClientHuntState.getElapsedMs(),
+                    ClientHuntState.isWon() ? ClientHuntState.getWinnerName() : null,
+                    false);
+            return;
+        }
+
+        // Singleplayer fallback
+        if (HuntState.isActive()) {
+            renderHud(context, client.textRenderer,
+                    HuntState.getTargetItem(),
+                    HuntState.isWon(),
+                    HuntState.isWon() ? HuntState.getFinalTimeMs() : HuntState.getAccumulatedMs(),
+                    null,
+                    true);
+        }
     }
 
-    private static void renderHudBlock(DrawContext context, TextRenderer textRenderer) {
-        Identifier targetId = HuntState.getTargetItem();
+    private static void renderHud(DrawContext context, TextRenderer textRenderer,
+                                   Identifier targetId, boolean won, long timeMs,
+                                   String winnerName, boolean singleplayer) {
         if (targetId == null) return;
 
         Item item = Registries.ITEM.get(targetId);
         ItemStack stack = new ItemStack(item);
         Text itemName = ItemPool.getDisplayName(item);
-        boolean won = HuntState.isWon();
 
         int screenWidth = MinecraftClient.getInstance().getWindow().getScaledWidth();
         int centreX = screenWidth / 2;
         int y = TOP_MARGIN;
 
-        // Item icon — centred at top, pinned to screen edge
+        // Item icon — centred at top
         context.drawItem(stack, centreX - 8, y);
         y += 16 + LINE_GAP;
 
@@ -56,8 +73,7 @@ public class HuntHudRenderer {
         y += textRenderer.fontHeight + LINE_GAP;
 
         // Timer — centred below name, larger on win
-        long ms = won ? HuntState.getFinalTimeMs() : HuntState.getAccumulatedMs();
-        String timeStr = HuntState.formatTime(ms);
+        String timeStr = singleplayer ? HuntState.formatTime(timeMs) : HuntState.formatTimeSeconds(timeMs);
         if (won) {
             float timerWidthF = textRenderer.getWidth(timeStr) * WIN_TIMER_SCALE;
             context.getMatrices().pushMatrix();
@@ -72,16 +88,27 @@ public class HuntHudRenderer {
             y += textRenderer.fontHeight + LINE_GAP;
         }
 
-        // Best time — centred below timer
-        long bestTimeMs = ResultStore.getBestTime(targetId);
-        if (bestTimeMs >= 0) {
-            String bestStr = "Best: " + HuntState.formatTime(bestTimeMs);
-            float bestWidthF = textRenderer.getWidth(bestStr) * BEST_SCALE;
-            context.getMatrices().pushMatrix();
-            context.getMatrices().translate(centreX - bestWidthF / 2f, (float) y);
-            context.getMatrices().scale(BEST_SCALE, BEST_SCALE);
-            context.drawText(textRenderer, bestStr, 0, 0, BEST_COLOR, true);
-            context.getMatrices().popMatrix();
+        // Winner name (multiplayer only)
+        if (won && winnerName != null && !winnerName.isEmpty()) {
+            String winText = winnerName + " wins!";
+            int winWidth = textRenderer.getWidth(winText);
+            context.drawText(textRenderer, winText,
+                    centreX - winWidth / 2, y, WIN_NAME_COLOR, true);
+            y += textRenderer.fontHeight + LINE_GAP;
+        }
+
+        // Best time (singleplayer only)
+        if (singleplayer) {
+            long bestTimeMs = ResultStore.getBestTime(targetId);
+            if (bestTimeMs >= 0) {
+                String bestStr = "Best: " + HuntState.formatTime(bestTimeMs);
+                float bestWidthF = textRenderer.getWidth(bestStr) * BEST_SCALE;
+                context.getMatrices().pushMatrix();
+                context.getMatrices().translate(centreX - bestWidthF / 2f, (float) y);
+                context.getMatrices().scale(BEST_SCALE, BEST_SCALE);
+                context.drawText(textRenderer, bestStr, 0, 0, BEST_COLOR, true);
+                context.getMatrices().popMatrix();
+            }
         }
     }
 }
