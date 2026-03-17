@@ -142,6 +142,7 @@ Uses [SemVer](https://semver.org/). Version is set in `gradle.properties` (`mod_
 
 | Version | Date       | Notes                                    |
 |---------|------------|------------------------------------------|
+| 2.1.0 | 2026-03-17 |  |
 | 2.0.0 | 2026-03-16 |  |
 | 2.0.0 | 2026-03-16 |  |
 | 2.0.0 | 2026-03-16 | Multiplayer support: server commands, HUD sync, vanilla client action bar |
