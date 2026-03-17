@@ -1,3 +1,11 @@
+## v2.1.0
+
+This release prevents players from circumventing the hunt by switching game modes during an active singleplayer session.
+
+### Fixed
+
+- Game mode is now locked to Survival during active singleplayer hunts, preventing players from opening to LAN with cheats to switch to Creative mode
+
 ## v2.0.0
 
 SpawnHunt now supports multiplayer — run hunts on any Fabric server with full HUD sync for mod clients and action bar fallback for vanilla players.
