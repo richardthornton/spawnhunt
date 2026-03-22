@@ -1,3 +1,11 @@
+## v2.2.0
+
+This release adds a new slot machine rolling animation to the single player menu.
+
+### Added
+
+- Slot machine rolling animation in the singleplayer menu
+
 ## v2.1.0
 
 This release prevents players from circumventing the hunt by switching game modes during an active singleplayer session.
