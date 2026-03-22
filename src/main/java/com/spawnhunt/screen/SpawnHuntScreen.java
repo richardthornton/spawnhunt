@@ -3,6 +3,7 @@ package com.spawnhunt.screen;
 import com.spawnhunt.data.HuntState;
 import com.spawnhunt.data.ItemPool;
 import com.spawnhunt.data.ResultStore;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
@@ -10,12 +11,15 @@ import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.gui.screen.world.CreateWorldScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.CheckboxWidget;
+import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -41,10 +45,29 @@ public class SpawnHuntScreen extends Screen {
     private static final int BTN_H = 20;
     private static final int BTN_GAP = 4;
 
+    // Rolling animation constants
+    private static final double ROLL_DURATION_MS = 5000.0;
+    private static final double ROLL_BASE_DELAY = 50.0;
+    private static final double ROLL_MAX_DELAY = 400.0;
+
     private final Random random = new Random();
     private Item targetItem;
     private boolean hardcore;
     private boolean showHistory;
+
+    // Rolling animation state
+    private boolean isRolling;
+    private boolean rollPending;       // deferred start until first render (sound manager not ready in constructor)
+    private long rollStartMs;
+    private List<Long> rollTickTimes;  // cumulative timestamps for each item switch
+    private List<Item> rollItems;      // items to display at each tick index
+    private int rollIndex;
+    private Item displayItem;          // item currently shown (rolling item or final target)
+
+    // Button references for enabling/disabling during roll
+    private ButtonWidget startButton;
+    private ButtonWidget rerollButton;
+    private ButtonWidget listButton;
 
     // Clickable "History" / "Back" link bounds (set during render)
     private int historyLinkX, historyLinkY, historyLinkW, historyLinkH;
@@ -52,7 +75,9 @@ public class SpawnHuntScreen extends Screen {
     public SpawnHuntScreen() {
         super(Text.literal("SpawnHunt"));
         this.targetItem = ItemPool.getRandomItem(random);
+        this.displayItem = this.targetItem;
         this.hardcore = true;
+        this.rollPending = true;
     }
 
     public SpawnHuntScreen(Item preselectedItem) {
@@ -62,6 +87,7 @@ public class SpawnHuntScreen extends Screen {
     public SpawnHuntScreen(Item preselectedItem, boolean hardcore) {
         super(Text.literal("SpawnHunt"));
         this.targetItem = preselectedItem;
+        this.displayItem = preselectedItem;
         this.hardcore = hardcore;
     }
 
@@ -82,7 +108,7 @@ public class SpawnHuntScreen extends Screen {
         int rightBtnX = centerX + BTN_GAP / 2;
 
         // Row 1: Start, Reroll
-        this.addDrawableChild(
+        this.startButton = this.addDrawableChild(
                 ButtonWidget.builder(Text.literal("Start"), button -> {
                     HuntState.startHunt(Registries.ITEM.getId(targetItem), this.hardcore);
                     CreateWorldScreen.show(this.client, () -> {
@@ -93,10 +119,11 @@ public class SpawnHuntScreen extends Screen {
                 .build()
         );
 
-        this.addDrawableChild(
+        this.rerollButton = this.addDrawableChild(
                 ButtonWidget.builder(Text.literal("Reroll"), button -> {
                     this.targetItem = ItemPool.getRandomItem(random);
                     this.showHistory = false;
+                    startRolling();
                 })
                 .dimensions(rightBtnX, btnBlockY, BTN_W, BTN_H)
                 .build()
@@ -104,7 +131,7 @@ public class SpawnHuntScreen extends Screen {
 
         // Row 2: List, Cancel
         int row2Y = btnBlockY + BTN_H + BTN_GAP;
-        this.addDrawableChild(
+        this.listButton = this.addDrawableChild(
                 ButtonWidget.builder(Text.literal("List"), button -> {
                     this.client.setScreen(new ItemChooserScreen(this.targetItem, this.hardcore));
                 })
@@ -129,10 +156,85 @@ public class SpawnHuntScreen extends Screen {
                         .callback((checkbox, checked) -> this.hardcore = checked)
                         .build()
         );
+
+        // Apply initial button state if already rolling
+        updateButtonStates();
+    }
+
+    private void startRolling() {
+        // Pre-compute tick schedule with quadratic easing (fast → slow)
+        rollTickTimes = new ArrayList<>();
+        rollItems = new ArrayList<>();
+
+        double time = 0;
+        while (time < ROLL_DURATION_MS) {
+            rollTickTimes.add((long) time);
+            rollItems.add(ItemPool.getRandomItem(random));
+            double progress = time / ROLL_DURATION_MS;
+            double delay = ROLL_BASE_DELAY + (ROLL_MAX_DELAY - ROLL_BASE_DELAY) * progress * progress;
+            time += delay;
+        }
+
+        // Final tick is always the target item
+        rollTickTimes.add((long) time);
+        rollItems.add(targetItem);
+
+        rollIndex = 0;
+        displayItem = rollItems.get(0);
+        rollStartMs = System.currentTimeMillis();
+        isRolling = true;
+        updateButtonStates();
+    }
+
+    private void updateRolling() {
+        if (!isRolling) return;
+
+        long elapsed = System.currentTimeMillis() - rollStartMs;
+        int newIndex = rollIndex;
+
+        // Find the highest tick index we've reached
+        while (newIndex + 1 < rollTickTimes.size() && elapsed >= rollTickTimes.get(newIndex + 1)) {
+            newIndex++;
+        }
+
+        if (newIndex != rollIndex) {
+            rollIndex = newIndex;
+            displayItem = rollItems.get(rollIndex);
+
+            boolean isFinal = rollIndex >= rollTickTimes.size() - 1;
+
+            // Play click sound for each intermediate item (not the final reveal)
+            if (!isFinal) {
+                MinecraftClient.getInstance().getSoundManager()
+                        .play(PositionedSoundInstance.ui(SoundEvents.UI_BUTTON_CLICK.value(), 1.0f));
+            }
+
+            // Stop rolling when we reach the final item
+            if (isFinal) {
+                isRolling = false;
+                displayItem = targetItem;
+                updateButtonStates();
+            }
+        }
+    }
+
+    private void updateButtonStates() {
+        if (startButton != null) startButton.active = !isRolling;
+        if (rerollButton != null) rerollButton.active = !isRolling;
+        if (listButton != null) listButton.active = !isRolling;
     }
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        // Deferred roll start (sound manager not available in constructor)
+        if (rollPending) {
+            rollPending = false;
+            startRolling();
+        }
+
+        // Advance rolling animation
+        updateRolling();
+
         // Dark background
         context.fill(0, 0, this.width, this.height, 0xC0000000);
 
@@ -159,38 +261,50 @@ public class SpawnHuntScreen extends Screen {
         if (showHistory) {
             renderHistoryArea(context, centerX, iconAreaY);
         } else {
-            // Bobbing animation
-            float bob = (float) Math.sin(System.currentTimeMillis() / 500.0) * 3.0f;
-            int iconY = (int) (iconAreaY + bob);
+            int iconY;
+            if (isRolling) {
+                // No bobbing during roll — static position
+                iconY = iconAreaY;
+            } else {
+                // Bobbing animation when settled
+                float bob = (float) Math.sin(System.currentTimeMillis() / 500.0) * 3.0f;
+                iconY = (int) (iconAreaY + bob);
+            }
 
             context.getMatrices().pushMatrix();
             context.getMatrices().translate((float) (centerX - ICON_SIZE / 2), (float) iconY);
             context.getMatrices().scale((float) ICON_SCALE, (float) ICON_SCALE);
-            context.drawItem(new ItemStack(targetItem), 0, 0);
+            context.drawItem(new ItemStack(displayItem), 0, 0);
             context.getMatrices().popMatrix();
         }
         curY += ICON_SIZE + GAP_SMALL;
 
         // Item name
-        Text itemName = ItemPool.getDisplayName(targetItem);
+        Text itemName = ItemPool.getDisplayName(displayItem);
+        int nameColor = isRolling ? 0xFF888888 : 0xFFFFFF00;
         context.drawText(this.textRenderer, itemName,
-                centerX - this.textRenderer.getWidth(itemName) / 2, curY, 0xFFFFFF00, true);
+                centerX - this.textRenderer.getWidth(itemName) / 2, curY, nameColor, true);
         curY += TEXT_H + GAP_SMALL;
 
-        // History toggle link
-        Text linkText = Text.literal(showHistory ? "< Back" : "History >");
-        int linkW = this.textRenderer.getWidth(linkText);
-        int linkX = centerX - linkW / 2;
-        boolean hovering = mouseX >= linkX && mouseX <= linkX + linkW
-                && mouseY >= curY && mouseY <= curY + TEXT_H;
-        int linkColor = hovering ? 0xFF88CCFF : 0xFF6699CC;
-        context.drawText(this.textRenderer, linkText, linkX, curY, linkColor, true);
+        // History toggle link (hidden during rolling)
+        if (!isRolling) {
+            Text linkText = Text.literal(showHistory ? "< Back" : "History >");
+            int linkW = this.textRenderer.getWidth(linkText);
+            int linkX = centerX - linkW / 2;
+            boolean hovering = mouseX >= linkX && mouseX <= linkX + linkW
+                    && mouseY >= curY && mouseY <= curY + TEXT_H;
+            int linkColor = hovering ? 0xFF88CCFF : 0xFF6699CC;
+            context.drawText(this.textRenderer, linkText, linkX, curY, linkColor, true);
 
-        // Store link bounds for click detection
-        historyLinkX = linkX;
-        historyLinkY = curY;
-        historyLinkW = linkW;
-        historyLinkH = TEXT_H;
+            historyLinkX = linkX;
+            historyLinkY = curY;
+            historyLinkW = linkW;
+            historyLinkH = TEXT_H;
+        } else {
+            // Clear link bounds so clicks don't register during rolling
+            historyLinkW = 0;
+            historyLinkH = 0;
+        }
     }
 
     private void renderHistoryArea(DrawContext context, int centerX, int areaY) {
