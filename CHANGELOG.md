@@ -4,7 +4,7 @@ This release adds a new slot machine rolling animation to the single player menu
 
 ### Added
 
-- Slot machine rollimg animation in the singleplayer menu
+- Slot machine rolling animation in the singleplayer menu
 
 ## v2.1.0
 
