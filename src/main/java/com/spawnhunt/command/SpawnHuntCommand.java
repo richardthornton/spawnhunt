@@ -56,17 +56,23 @@ public class SpawnHuntCommand {
     }
 
     private static int startRandom(CommandContext<ServerCommandSource> context) {
-        if (ServerHuntState.isActive()) {
+        if (ServerHuntState.isActive() && !ServerHuntState.isWon()) {
             context.getSource().sendError(Text.literal("A hunt is already active! Use /spawnhunt stop first."));
             return 0;
+        }
+        if (ServerHuntState.isActive()) {
+            doStop(context);
         }
         return doStart(context, ItemPool.getRandomItem(ThreadLocalRandom.current()));
     }
 
     private static int startSpecific(CommandContext<ServerCommandSource> context) {
-        if (ServerHuntState.isActive()) {
+        if (ServerHuntState.isActive() && !ServerHuntState.isWon()) {
             context.getSource().sendError(Text.literal("A hunt is already active! Use /spawnhunt stop first."));
             return 0;
+        }
+        if (ServerHuntState.isActive()) {
+            doStop(context);
         }
         Item item = resolveItem(context);
         if (item == null) return 0;

@@ -31,8 +31,10 @@ jobs:
         run: |
           DATE=$(date -u +%Y-%m-%d)
           VERSION="${{ steps.version.outputs.version }}"
-          # Insert new row after the table header separator line
-          sed -i "/^|---------|------------|/a | $VERSION | $DATE |  |" CLAUDE.md
+          # Only insert if a row for this version doesn't already exist
+          if ! grep -q "| $VERSION |" CLAUDE.md; then
+            sed -i "/^|---------|------------|/a | $VERSION | $DATE |  |" CLAUDE.md
+          fi
 
       - name: Commit version bump
         run: |
