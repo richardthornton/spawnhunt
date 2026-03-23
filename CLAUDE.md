@@ -142,6 +142,7 @@ Uses [SemVer](https://semver.org/). Version is set in `gradle.properties` (`mod_
 
 | Version | Date       | Notes                                    |
 |---------|------------|------------------------------------------|
+| 2.2.1 | 2026-03-23 |  |
 | 2.2.0 | 2026-03-22 |  |
 | 2.2.0 | 2026-03-22 | Slot machine rolling animation |
 | 2.1.0 | 2026-03-17 | Lock to survival during active singleplayer hunts |
