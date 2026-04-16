@@ -40,7 +40,8 @@ com.spawnhunt
 │   └── ServerHuntManager.java     // Server tick: inventory scan, timer broadcast, win detection
 └── mixin/
     ├── TitleScreenMixin.java      // Injects "SpawnHunt" button into main menu
-    └── CreateWorldScreenMixin.java // Auto-configures and triggers world creation
+    ├── CreateWorldScreenMixin.java // Auto-configures and triggers world creation
+    └── GameModeLockMixin.java     // Prevents game mode changes during active SP hunts
 ```
 
 ## Tech Stack
@@ -131,11 +132,14 @@ JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-25.0.2.10-hotspot" ./gradlew bu
 - **Two separate state paths** — singleplayer uses `HuntState` (client static), multiplayer uses `ServerHuntState` (server) synced to `ClientHuntState` (client mirror). No shared mutable state.
 - **Vanilla client support** — players without the mod see action bar messages during active hunts and chat messages for start/stop/win events.
 - **Multiplayer commands** require OP level 2 (GAMEMASTERS); `/spawnhunt status` is available to all players.
+- **Pre-world item rendering** — MC 26.1 binds item components (including `ITEM_MODEL`) during world load, but the selection screen runs pre-world. `ItemPool.ensureComponentsBound()` binds a minimal `DataComponentMap` with `ITEM_MODEL` set to the item's registry ID so `ItemStack` creation and rendering works on the title screen. Vanilla overwrites with full data-driven components during world load.
+- **Display names** use `Component.translatable(item.getDescriptionId())` instead of `ItemStack.getHoverName()` to avoid creating ItemStacks for name resolution (safe pre-world).
 
 ## Key Risks
 
 - **Programmatic world creation** has no clean public API — may need deep mixins or auto-click approach as fallback.
 - **Item pool accuracy** — maintain exclusion list carefully, log pool on startup, iterate via community feedback.
+- **Pre-world component binding** — `ensureComponentsBound()` binds minimal components before vanilla does. If vanilla changes the binding lifecycle or adds validation, this could break. Monitor across MC updates.
 
 ## Versioning
 
@@ -145,7 +149,6 @@ Uses [SemVer](https://semver.org/). Version is set in `gradle.properties` (`mod_
 |---------|------------|------------------------------------------|
 | 3.0.0 | 2026-04-16 | Port to MC 26.1: Java 25, Mojang mappings, HudElementRegistry, unobfuscated build |
 | 2.2.1 | 2026-03-23 |  |
-| 2.2.0 | 2026-03-22 |  |
 | 2.2.0 | 2026-03-22 | Slot machine rolling animation |
 | 2.1.0 | 2026-03-17 | Lock to survival during active singleplayer hunts |
 | 2.0.0 | 2026-03-16 | Multiplayer support: server commands, HUD sync, vanilla client action bar |
@@ -172,6 +175,26 @@ Uses [SemVer](https://semver.org/). Version is set in `gradle.properties` (`mod_
 - `EditBox.getText()` → `getValue()`, `setChangedListener()` → `setResponder()`
 - `ObjectSelectionList.getSelectedOrNull()` → `getSelected()`
 - `Checkbox.Builder.checked()` → `selected()`, `.callback()` → `.onValueChange()`
+- `Button.dimensions()` → `bounds()`, `addDrawableChild()` → `addRenderableWidget()`
+- `Screen.close()` → `onClose()` override
+- `getWindow().getScaledWidth()` → `getWindow().getGuiScaledWidth()`
+- `source.sendError()` → `sendFailure()`, `sendFeedback()` → `sendSuccess()`
+- `Permission.Level` → `Permission.HasCommandLevel`, `source.getPermissions()` → `source.permissions()`
+- `isDead()` → `isDeadOrDying()`, `getEntityWorld()` → `level()`
+- `server.getPlayerManager().getPlayerList()` → `server.getPlayerList().getPlayers()`
+- `server.getCurrentPlayerCount()` → `server.getPlayerCount()`
+- `server.isDedicated()` → `server.isDedicatedServer()`
+- `CreateWorldScreen.show()` → `openFresh()`, `createLevel()` → `onCreate()`
+- `WorldCreator` → `WorldCreationUiState`, `getWorldCreator()` → `getUiState()`
+- `WorldCreator.Mode.HARDCORE` → `WorldCreationUiState.SelectedGameMode.HARDCORE`
+- `setCheatsEnabled()` → `setAllowCommands()`, `setWorldName()`/`getWorldName()` → `setName()`/`getName()`
+- `MinecraftClient.send()` → `Minecraft.execute()`
+- `IdentifierArgumentType.identifier()` → `IdentifierArgument.id()`, `.getIdentifier()` → `.getId()`
+- `Registries.ITEM` → `BuiltInRegistries.ITEM`, `.getId()` → `.getKey()`, `.containsId()` → `.containsKey()`
+- `Registry.get(Identifier)` now returns `Optional<Reference<T>>` — use `DefaultedRegistry.getValue()` for direct lookup
+- `Item.components()` delegates to holder — crashes if components not bound; use `Item.getDescriptionId()` for safe pre-world name access
+- Access widener namespace must be `official` (not `named`) for unobfuscated MC
+- `DataComponents.ITEM_MODEL` (`Identifier`) drives item rendering — must be set for `context.item()` to render
 
 ## Conventions
 
