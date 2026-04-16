@@ -1,6 +1,6 @@
 package com.spawnhunt.data;
 
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.Identifier;
 
 /**
  * Singleton holding all runtime state for the current hunt.

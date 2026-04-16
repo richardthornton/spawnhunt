@@ -1,6 +1,6 @@
 package com.spawnhunt.network;
 
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.Identifier;
 
 /**
  * Client-side mirror of the server's hunt state, updated via network packets.
@@ -17,7 +17,7 @@ public class ClientHuntState {
     public static void update(HuntSyncS2CPayload payload) {
         active = payload.active();
         targetItem = (payload.active() && !payload.targetItemId().isEmpty())
-                ? Identifier.of(payload.targetItemId()) : null;
+                ? Identifier.parse(payload.targetItemId()) : null;
         elapsedMs = payload.elapsedMs();
         won = payload.won();
         winnerName = payload.winnerName();
@@ -28,7 +28,7 @@ public class ClientHuntState {
         won = true;
         winnerName = payload.winnerName();
         finalTimeMs = payload.finalTimeMs();
-        targetItem = Identifier.of(payload.targetItemId());
+        targetItem = Identifier.parse(payload.targetItemId());
     }
 
     public static void reset() {
