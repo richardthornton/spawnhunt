@@ -13,9 +13,10 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
-import net.minecraft.client.gui.screen.DeathScreen;
-import net.minecraft.sound.SoundEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+import net.minecraft.client.gui.screens.DeathScreen;
+import net.minecraft.resources.Identifier;
+import net.minecraft.sounds.SoundEvents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +42,7 @@ public class SpawnHuntMod implements ClientModInitializer {
         // Tick the timer and check inventory each client tick
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (HuntState.isActive() && !HuntState.isWon() && client.player != null) {
-                boolean paused = client.isPaused() || client.currentScreen instanceof DeathScreen;
+                boolean paused = client.isPaused() || client.screen instanceof DeathScreen;
                 HuntState.tick(paused);
                 InventoryListener.tick(client);
             }
@@ -51,7 +52,7 @@ public class SpawnHuntMod implements ClientModInitializer {
         WorldLifecycleHandler.register();
 
         // Render the HUD overlay (target block + timer)
-        HudRenderCallback.EVENT.register(HuntHudRenderer::render);
+        HudElementRegistry.addLast(Identifier.fromNamespaceAndPath("spawnhunt", "hud"), HuntHudRenderer::extractRenderState);
 
         // Register multiplayer packet receivers
         ClientPlayNetworking.registerGlobalReceiver(HuntSyncS2CPayload.ID, (payload, context) -> {

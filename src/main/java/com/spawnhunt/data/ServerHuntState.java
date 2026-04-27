@@ -1,7 +1,7 @@
 package com.spawnhunt.data;
 
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerPlayer;
 
 import java.util.UUID;
 
@@ -29,11 +29,11 @@ public class ServerHuntState {
         reset();
     }
 
-    public static void win(ServerPlayerEntity player) {
+    public static void win(ServerPlayer player) {
         if (!active || won) return;
         finalTimeMs = System.currentTimeMillis() - startTimeMs;
         won = true;
-        winnerUuid = player.getUuid();
+        winnerUuid = player.getUUID();
         winnerName = player.getName().getString();
     }
 

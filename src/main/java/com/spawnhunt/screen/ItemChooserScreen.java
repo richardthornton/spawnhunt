@@ -1,16 +1,16 @@
 package com.spawnhunt.screen;
 
 import com.spawnhunt.data.ItemPool;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.client.gui.Click;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.ObjectSelectionList;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.Util;
 
 import java.util.ArrayList;
@@ -21,13 +21,13 @@ import java.util.Locale;
 public class ItemChooserScreen extends Screen {
     private final Item currentItem;
     private final boolean hardcore;
-    private TextFieldWidget searchField;
+    private EditBox searchField;
     private ItemListWidget itemList;
-    private ButtonWidget selectButton;
+    private Button selectButton;
     private List<Item> sortedItems;
 
     public ItemChooserScreen(Item currentItem, boolean hardcore) {
-        super(Text.literal("Choose Item"));
+        super(Component.literal("Choose Item"));
         this.currentItem = currentItem;
         this.hardcore = hardcore;
     }
@@ -38,36 +38,36 @@ public class ItemChooserScreen extends Screen {
         sortedItems.sort(Comparator.comparing(item ->
                 ItemPool.getDisplayName(item).getString().toLowerCase(Locale.ROOT)));
 
-        searchField = new TextFieldWidget(this.textRenderer, this.width / 2 - 100, 22, 200, 20, Text.literal("Search"));
-        searchField.setChangedListener(text -> refreshList());
-        this.addDrawableChild(searchField);
+        searchField = new EditBox(this.getFont(), this.width / 2 - 100, 22, 200, 20, Component.literal("Search"));
+        searchField.setResponder(text -> refreshList());
+        this.addRenderableWidget(searchField);
 
-        itemList = new ItemListWidget(this.client, this.width, this.height - 84, 48, 20);
-        this.addDrawableChild(itemList);
+        itemList = new ItemListWidget(this.minecraft, this.width, this.height - 84, 48, 20);
+        this.addRenderableWidget(itemList);
 
         refreshList();
 
-        this.addDrawableChild(
-                ButtonWidget.builder(Text.literal("Back"), button -> close())
-                        .dimensions(this.width / 2 - 104, this.height - 28, 100, 20).build()
+        this.addRenderableWidget(
+                Button.builder(Component.literal("Back"), button -> onClose())
+                        .bounds(this.width / 2 - 104, this.height - 28, 100, 20).build()
         );
 
-        selectButton = ButtonWidget.builder(Text.literal("Select"), button -> selectAndReturn())
-                .dimensions(this.width / 2 + 4, this.height - 28, 100, 20).build();
-        this.addDrawableChild(selectButton);
+        selectButton = Button.builder(Component.literal("Select"), button -> selectAndReturn())
+                .bounds(this.width / 2 + 4, this.height - 28, 100, 20).build();
+        this.addRenderableWidget(selectButton);
 
         this.setInitialFocus(searchField);
     }
 
     void selectAndReturn() {
-        ItemListWidget.Entry entry = itemList.getSelectedOrNull();
+        ItemListWidget.Entry entry = itemList.getSelected();
         if (entry != null) {
-            this.client.setScreen(new SpawnHuntScreen(entry.getItem(), this.hardcore));
+            this.minecraft.setScreen(new SpawnHuntScreen(entry.getItem(), this.hardcore));
         }
     }
 
     private void refreshList() {
-        String query = searchField.getText().toLowerCase(Locale.ROOT).trim();
+        String query = searchField.getValue().toLowerCase(Locale.ROOT).trim();
         itemList.clearEntries();
 
         ItemListWidget.Entry toSelect = null;
@@ -85,24 +85,24 @@ public class ItemChooserScreen extends Screen {
             itemList.setSelected(toSelect);
             itemList.centerScrollOn(toSelect);
         } else {
-            itemList.setScrollY(0);
+            itemList.setScrollAmount(0);
         }
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
-        context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 8, 0xFFFFFF);
-        selectButton.active = itemList.getSelectedOrNull() != null;
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(context, mouseX, mouseY, delta);
+        context.centeredText(this.getFont(), this.title, this.width / 2, 8, 0xFFFFFF);
+        selectButton.active = itemList.getSelected() != null;
     }
 
     @Override
-    public void close() {
-        this.client.setScreen(new SpawnHuntScreen(currentItem, this.hardcore));
+    public void onClose() {
+        this.minecraft.setScreen(new SpawnHuntScreen(currentItem, this.hardcore));
     }
 
-    class ItemListWidget extends AlwaysSelectedEntryListWidget<ItemListWidget.Entry> {
-        public ItemListWidget(MinecraftClient client, int width, int height, int y, int itemHeight) {
+    class ItemListWidget extends ObjectSelectionList<ItemListWidget.Entry> {
+        public ItemListWidget(Minecraft client, int width, int height, int y, int itemHeight) {
             super(client, width, height, y, itemHeight);
         }
 
@@ -127,9 +127,9 @@ public class ItemChooserScreen extends Screen {
             return entry;
         }
 
-        class Entry extends AlwaysSelectedEntryListWidget.Entry<Entry> {
+        class Entry extends ObjectSelectionList.Entry<Entry> {
             private final Item item;
-            private final Text displayName;
+            private final Component displayName;
             private long lastClickTime;
 
             public Entry(Item item) {
@@ -142,23 +142,23 @@ public class ItemChooserScreen extends Screen {
             }
 
             @Override
-            public void render(DrawContext context, int mouseX, int mouseY, boolean hovered, float delta) {
-                int x = this.getX();
-                int y = this.getY();
-                context.drawItem(new ItemStack(item), x + 2, y + 1);
-                context.drawText(ItemChooserScreen.this.textRenderer, displayName,
+            public void extractContent(GuiGraphicsExtractor context, int mouseX, int mouseY, boolean hovered, float delta) {
+                int x = this.getContentX();
+                int y = this.getContentY();
+                context.item(new ItemStack(item), x + 2, y + 1);
+                context.text(Minecraft.getInstance().font, displayName,
                         x + 24, y + 5, 0xFFFFFFFF, true);
             }
 
             @Override
-            public Text getNarration() {
+            public Component getNarration() {
                 return displayName;
             }
 
             @Override
-            public boolean mouseClicked(Click click, boolean selected) {
+            public boolean mouseClicked(MouseButtonEvent event, boolean selected) {
                 ItemListWidget.this.setSelected(this);
-                long now = Util.getMeasuringTimeMs();
+                long now = Util.getMillis();
                 if (now - lastClickTime < 250L) {
                     ItemChooserScreen.this.selectAndReturn();
                 }

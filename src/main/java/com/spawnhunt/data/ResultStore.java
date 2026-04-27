@@ -4,8 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.spawnhunt.SpawnHuntMod;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.resources.Identifier;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -32,14 +32,14 @@ public class ResultStore {
     }
 
     private static String getUuid() {
-        var session = MinecraftClient.getInstance().getSession();
-        var uuid = session.getUuidOrNull();
+        var user = Minecraft.getInstance().getUser();
+        var uuid = user.getProfileId();
         return uuid != null ? uuid.toString() : "offline";
     }
 
     private static Path getFilePath() {
         String uuid = getUuid();
-        return MinecraftClient.getInstance().runDirectory.toPath()
+        return Minecraft.getInstance().gameDirectory.toPath()
                 .resolve("spawnhunt").resolve("results").resolve(uuid + ".json");
     }
 

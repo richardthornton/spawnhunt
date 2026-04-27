@@ -1,13 +1,14 @@
 package com.spawnhunt.data;
 
 import com.spawnhunt.SpawnHuntMod;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
 
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
 
 import java.util.*;
 
@@ -19,7 +20,7 @@ import java.util.*;
  */
 public class ItemPool {
     private static List<Item> pool = null;
-    private static final Map<Item, Text> displayNameCache = new HashMap<>();
+    private static final Map<Item, Component> displayNameCache = new HashMap<>();
 
     private static final Set<String> EXCLUDED = Set.of(
             // Creative-only / technical
@@ -57,10 +58,7 @@ public class ItemPool {
             "written_book",
             "firework_rocket",
             "firework_star",
-            "filled_map",
-
-            // Not fully available in 1.21.1
-            "bundle"
+            "filled_map"
     );
 
     private static boolean isExcluded(String path) {
@@ -80,10 +78,10 @@ public class ItemPool {
     private static List<Item> buildPool() {
         List<Item> result = new ArrayList<>();
 
-        for (Item item : Registries.ITEM) {
+        for (Item item : BuiltInRegistries.ITEM) {
             if (item == Items.AIR) continue;
 
-            Identifier id = Registries.ITEM.getId(item);
+            Identifier id = BuiltInRegistries.ITEM.getKey(item);
             if (!id.getNamespace().equals("minecraft")) continue;
 
             if (isExcluded(id.getPath())) continue;
@@ -94,6 +92,29 @@ public class ItemPool {
         return Collections.unmodifiableList(result);
     }
 
+    /**
+     * MC 26.1: item components are data-driven and not bound until world load.
+     * This binds a minimal component map (with ITEM_MODEL) so ItemStacks can be
+     * created pre-world for the selection screen. Vanilla overwrites with full
+     * data-driven components during world load.
+     */
+    public static void ensureComponentsBound() {
+        int bound = 0;
+        for (Item item : BuiltInRegistries.ITEM) {
+            if (!item.builtInRegistryHolder().areComponentsBound()) {
+                Identifier id = BuiltInRegistries.ITEM.getKey(item);
+                DataComponentMap components = DataComponentMap.builder()
+                        .set(DataComponents.ITEM_MODEL, id)
+                        .build();
+                item.builtInRegistryHolder().bindComponents(components);
+                bound++;
+            }
+        }
+        if (bound > 0) {
+            SpawnHuntMod.LOGGER.info("SpawnHunt: pre-bound model components for {} items (pre-world rendering)", bound);
+        }
+    }
+
     private static final String MUSIC_DISC_PREFIX = "music_disc_";
 
     /**
@@ -101,19 +122,20 @@ public class ItemPool {
      * "Music Disc - {song}" (e.g. "Music Disc - chirp") since getName()
      * alone just returns "Music Disc" for all of them.
      */
-    public static Text getDisplayName(Item item) {
-        Text cached = displayNameCache.get(item);
+    public static Component getDisplayName(Item item) {
+        Component cached = displayNameCache.get(item);
         if (cached != null) return cached;
 
-        ItemStack stack = new ItemStack(item);
-        Text name = stack.getName();
-
-        Identifier id = Registries.ITEM.getId(item);
+        Identifier id = BuiltInRegistries.ITEM.getKey(item);
         String path = id.getPath();
 
+        Component name;
         if (path.startsWith(MUSIC_DISC_PREFIX)) {
             String songId = path.substring(MUSIC_DISC_PREFIX.length());
-            name = Text.literal("Music Disc - " + songId);
+            name = Component.literal("Music Disc - " + songId);
+        } else {
+            // Use the translation key directly — safe pre-world (no ItemStack needed)
+            name = Component.translatable(item.getDescriptionId());
         }
 
         displayNameCache.put(item, name);
@@ -128,7 +150,7 @@ public class ItemPool {
     public static void logPool() {
         List<Item> p = getPool();
         for (Item item : p) {
-            SpawnHuntMod.LOGGER.debug("  pool: {}", Registries.ITEM.getId(item));
+            SpawnHuntMod.LOGGER.debug("  pool: {}", BuiltInRegistries.ITEM.getKey(item));
         }
         SpawnHuntMod.LOGGER.info("Item pool initialized — {} survival-obtainable items", p.size());
     }

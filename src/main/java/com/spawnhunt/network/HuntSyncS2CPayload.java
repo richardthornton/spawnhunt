@@ -1,9 +1,9 @@
 package com.spawnhunt.network;
 
-import net.minecraft.network.RegistryByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.packet.CustomPayload;
-import net.minecraft.util.Identifier;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.Identifier;
 
 public record HuntSyncS2CPayload(
         boolean active,
@@ -12,37 +12,37 @@ public record HuntSyncS2CPayload(
         boolean won,
         String winnerName,
         long finalTimeMs
-) implements CustomPayload {
+) implements CustomPacketPayload {
 
-    public static final Id<HuntSyncS2CPayload> ID =
-            new Id<>(Identifier.of("spawnhunt", "hunt_sync"));
+    public static final Type<HuntSyncS2CPayload> ID =
+            new Type<>(Identifier.fromNamespaceAndPath("spawnhunt", "hunt_sync"));
 
-    public static final PacketCodec<RegistryByteBuf, HuntSyncS2CPayload> CODEC = new PacketCodec<>() {
+    public static final StreamCodec<RegistryFriendlyByteBuf, HuntSyncS2CPayload> CODEC = new StreamCodec<>() {
         @Override
-        public HuntSyncS2CPayload decode(RegistryByteBuf buf) {
+        public HuntSyncS2CPayload decode(RegistryFriendlyByteBuf buf) {
             return new HuntSyncS2CPayload(
                     buf.readBoolean(),
-                    buf.readString(256),
+                    buf.readUtf(256),
                     buf.readLong(),
                     buf.readBoolean(),
-                    buf.readString(64),
+                    buf.readUtf(64),
                     buf.readLong()
             );
         }
 
         @Override
-        public void encode(RegistryByteBuf buf, HuntSyncS2CPayload payload) {
+        public void encode(RegistryFriendlyByteBuf buf, HuntSyncS2CPayload payload) {
             buf.writeBoolean(payload.active);
-            buf.writeString(payload.targetItemId);
+            buf.writeUtf(payload.targetItemId);
             buf.writeLong(payload.elapsedMs);
             buf.writeBoolean(payload.won);
-            buf.writeString(payload.winnerName);
+            buf.writeUtf(payload.winnerName);
             buf.writeLong(payload.finalTimeMs);
         }
     };
 
     @Override
-    public Id<? extends CustomPayload> getId() {
+    public Type<? extends CustomPacketPayload> type() {
         return ID;
     }
 }
