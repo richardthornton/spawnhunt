@@ -23,6 +23,10 @@ public class HuntHudRenderer {
     private static final int BEST_COLOR = 0xFFAAFFAA;
     private static final int WIN_NAME_COLOR = 0xFF55FF55;
 
+    // Cached ItemStack — only recreated when targetId changes
+    private static Identifier cachedTargetId = null;
+    private static ItemStack cachedStack = null;
+
     public static void extractRenderState(GuiGraphicsExtractor context, DeltaTracker deltaTracker) {
         Minecraft client = Minecraft.getInstance();
         if (client.player == null) return;
@@ -54,16 +58,18 @@ public class HuntHudRenderer {
                                    String winnerName, boolean singleplayer) {
         if (targetId == null) return;
 
-        Item item = BuiltInRegistries.ITEM.getValue(targetId);
-        ItemStack stack = new ItemStack(item);
-        Component itemName = ItemPool.getDisplayName(item);
+        if (!targetId.equals(cachedTargetId)) {
+            cachedTargetId = targetId;
+            cachedStack = new ItemStack(BuiltInRegistries.ITEM.getValue(targetId));
+        }
+        Component itemName = ItemPool.getDisplayName(BuiltInRegistries.ITEM.getValue(targetId));
 
         int screenWidth = Minecraft.getInstance().getWindow().getGuiScaledWidth();
         int centreX = screenWidth / 2;
         int y = TOP_MARGIN;
 
         // Item icon — centred at top
-        context.item(stack, centreX - 8, y);
+        context.item(cachedStack, centreX - 8, y);
         y += 16 + LINE_GAP;
 
         // Item name — centred below icon

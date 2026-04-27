@@ -58,10 +58,7 @@ public class ItemPool {
             "written_book",
             "firework_rocket",
             "firework_star",
-            "filled_map",
-
-            // Not fully available in 1.21.1
-            "bundle"
+            "filled_map"
     );
 
     private static boolean isExcluded(String path) {
