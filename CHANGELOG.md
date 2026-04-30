@@ -1,3 +1,11 @@
+## v3.0.0
+
+26.1 support is here! Golden Dandelions watch out...
+
+### Added
+
+- SpawnHunt now supports Minecraft Java Edition version 26.1
+
 ## v2.2.0
 
 This release adds a new slot machine rolling animation to the single player menu.

@@ -8,15 +8,15 @@ import com.spawnhunt.network.HuntWinS2CPayload;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registries;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
+import net.minecraft.resources.Identifier;
 
 public class ServerHuntManager {
 
@@ -27,7 +27,7 @@ public class ServerHuntManager {
 
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             if (ServerHuntState.isActive()) {
-                ServerPlayerEntity player = handler.getPlayer();
+                ServerPlayer player = handler.getPlayer();
                 if (ServerPlayNetworking.canSend(player, HuntSyncS2CPayload.ID)) {
                     ServerPlayNetworking.send(player, buildSyncPayload());
                 }
@@ -63,11 +63,11 @@ public class ServerHuntManager {
         Identifier targetId = ServerHuntState.getTargetItem();
         if (targetId == null) return;
 
-        Item targetItem = Registries.ITEM.get(targetId);
+        Item targetItem = BuiltInRegistries.ITEM.getValue(targetId);
 
-        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-            for (int i = 0; i < player.getInventory().size(); i++) {
-                ItemStack stack = player.getInventory().getStack(i);
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
+                ItemStack stack = player.getInventory().getItem(i);
                 if (!stack.isEmpty() && stack.getItem() == targetItem) {
                     handleWin(server, player);
                     return;
@@ -76,23 +76,23 @@ public class ServerHuntManager {
         }
     }
 
-    private static void handleWin(MinecraftServer server, ServerPlayerEntity winner) {
+    private static void handleWin(MinecraftServer server, ServerPlayer winner) {
         ServerHuntState.win(winner);
 
         Identifier targetId = ServerHuntState.getTargetItem();
-        Item item = Registries.ITEM.get(targetId);
-        Text itemName = ItemPool.getDisplayName(item);
+        Item item = BuiltInRegistries.ITEM.getValue(targetId);
+        Component itemName = ItemPool.getDisplayName(item);
         String timeStr = HuntState.formatTimeSeconds(ServerHuntState.getFinalTimeMs());
 
         // Chat message to all players
-        Text winMessage = Text.empty()
-                .append(Text.literal("[SpawnHunt] ").formatted(Formatting.GOLD))
-                .append(Text.literal(winner.getName().getString()).formatted(Formatting.GREEN))
-                .append(Text.literal(" found ").formatted(Formatting.YELLOW))
-                .append(Text.literal(itemName.getString()).formatted(Formatting.AQUA))
-                .append(Text.literal(" in ").formatted(Formatting.YELLOW))
-                .append(Text.literal(timeStr).formatted(Formatting.GREEN))
-                .append(Text.literal("!").formatted(Formatting.YELLOW));
+        Component winMessage = Component.empty()
+                .append(Component.literal("[SpawnHunt] ").withStyle(ChatFormatting.GOLD))
+                .append(Component.literal(winner.getName().getString()).withStyle(ChatFormatting.GREEN))
+                .append(Component.literal(" found ").withStyle(ChatFormatting.YELLOW))
+                .append(Component.literal(itemName.getString()).withStyle(ChatFormatting.AQUA))
+                .append(Component.literal(" in ").withStyle(ChatFormatting.YELLOW))
+                .append(Component.literal(timeStr).withStyle(ChatFormatting.GREEN))
+                .append(Component.literal("!").withStyle(ChatFormatting.YELLOW));
 
         broadcastMessage(server, winMessage);
 
@@ -103,7 +103,7 @@ public class ServerHuntManager {
                 targetId.toString()
         );
 
-        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             if (ServerPlayNetworking.canSend(player, HuntWinS2CPayload.ID)) {
                 ServerPlayNetworking.send(player, winPayload);
             } else {
@@ -117,7 +117,7 @@ public class ServerHuntManager {
 
     private static void broadcastSyncToModClients(MinecraftServer server) {
         HuntSyncS2CPayload payload = buildSyncPayload();
-        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             if (ServerPlayNetworking.canSend(player, HuntSyncS2CPayload.ID)) {
                 ServerPlayNetworking.send(player, payload);
             }
@@ -130,20 +130,20 @@ public class ServerHuntManager {
         Identifier targetId = ServerHuntState.getTargetItem();
         if (targetId == null) return;
 
-        Item item = Registries.ITEM.get(targetId);
-        Text itemName = ItemPool.getDisplayName(item);
+        Item item = BuiltInRegistries.ITEM.getValue(targetId);
+        Component itemName = ItemPool.getDisplayName(item);
         String timeStr = HuntState.formatTimeSeconds(ServerHuntState.getElapsedMs());
 
-        Text actionBar = Text.empty()
-                .append(Text.literal("SpawnHunt").formatted(Formatting.GOLD))
-                .append(Text.literal(" | ").formatted(Formatting.GRAY))
-                .append(Text.literal(itemName.getString()).formatted(Formatting.AQUA))
-                .append(Text.literal(" | ").formatted(Formatting.GRAY))
-                .append(Text.literal(timeStr).formatted(Formatting.WHITE));
+        Component actionBar = Component.empty()
+                .append(Component.literal("SpawnHunt").withStyle(ChatFormatting.GOLD))
+                .append(Component.literal(" | ").withStyle(ChatFormatting.GRAY))
+                .append(Component.literal(itemName.getString()).withStyle(ChatFormatting.AQUA))
+                .append(Component.literal(" | ").withStyle(ChatFormatting.GRAY))
+                .append(Component.literal(timeStr).withStyle(ChatFormatting.WHITE));
 
-        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             if (!ServerPlayNetworking.canSend(player, HuntSyncS2CPayload.ID)) {
-                player.sendMessage(actionBar, true);
+                player.sendOverlayMessage(actionBar);
             }
         }
     }
@@ -164,7 +164,7 @@ public class ServerHuntManager {
      */
     public static void sendStopSync(MinecraftServer server) {
         HuntSyncS2CPayload payload = new HuntSyncS2CPayload(false, "", 0, false, "", 0);
-        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             if (ServerPlayNetworking.canSend(player, HuntSyncS2CPayload.ID)) {
                 ServerPlayNetworking.send(player, payload);
             }
@@ -174,9 +174,9 @@ public class ServerHuntManager {
     /**
      * Sends a chat message to all players on the server.
      */
-    public static void broadcastMessage(MinecraftServer server, Text message) {
-        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-            player.sendMessage(message, false);
+    public static void broadcastMessage(MinecraftServer server, Component message) {
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            player.sendSystemMessage(message);
         }
     }
 }

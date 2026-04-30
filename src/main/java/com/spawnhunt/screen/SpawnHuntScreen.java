@@ -3,21 +3,21 @@ package com.spawnhunt.screen;
 import com.spawnhunt.data.HuntState;
 import com.spawnhunt.data.ItemPool;
 import com.spawnhunt.data.ResultStore;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.TitleScreen;
-import net.minecraft.client.gui.screen.world.CreateWorldScreen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.CheckboxWidget;
-import net.minecraft.client.sound.PositionedSoundInstance;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registries;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Checkbox;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,17 +63,20 @@ public class SpawnHuntScreen extends Screen {
     private List<Item> rollItems;      // items to display at each tick index
     private int rollIndex;
     private Item displayItem;          // item currently shown (rolling item or final target)
+    private Item cachedStackItem;      // item the cached ItemStack was built for
+    private ItemStack cachedDisplayStack;
 
     // Button references for enabling/disabling during roll
-    private ButtonWidget startButton;
-    private ButtonWidget rerollButton;
-    private ButtonWidget listButton;
+    private Button startButton;
+    private Button rerollButton;
+    private Button listButton;
 
     // Clickable "History" / "Back" link bounds (set during render)
     private int historyLinkX, historyLinkY, historyLinkW, historyLinkH;
 
     public SpawnHuntScreen() {
-        super(Text.literal("SpawnHunt"));
+        super(Component.literal("SpawnHunt"));
+        ItemPool.ensureComponentsBound();
         this.targetItem = ItemPool.getRandomItem(random);
         this.displayItem = this.targetItem;
         this.hardcore = true;
@@ -85,7 +88,7 @@ public class SpawnHuntScreen extends Screen {
     }
 
     public SpawnHuntScreen(Item preselectedItem, boolean hardcore) {
-        super(Text.literal("SpawnHunt"));
+        super(Component.literal("SpawnHunt"));
         this.targetItem = preselectedItem;
         this.displayItem = preselectedItem;
         this.hardcore = hardcore;
@@ -108,52 +111,52 @@ public class SpawnHuntScreen extends Screen {
         int rightBtnX = centerX + BTN_GAP / 2;
 
         // Row 1: Start, Reroll
-        this.startButton = this.addDrawableChild(
-                ButtonWidget.builder(Text.literal("Start"), button -> {
-                    HuntState.startHunt(Registries.ITEM.getId(targetItem), this.hardcore);
-                    CreateWorldScreen.show(this.client, () -> {
-                        this.client.setScreen(new TitleScreen());
+        this.startButton = this.addRenderableWidget(
+                Button.builder(Component.literal("Start"), button -> {
+                    HuntState.startHunt(BuiltInRegistries.ITEM.getKey(targetItem), this.hardcore);
+                    CreateWorldScreen.openFresh(this.minecraft, () -> {
+                        this.minecraft.setScreen(new TitleScreen());
                     });
                 })
-                .dimensions(leftBtnX, btnBlockY, BTN_W, BTN_H)
+                .bounds(leftBtnX, btnBlockY, BTN_W, BTN_H)
                 .build()
         );
 
-        this.rerollButton = this.addDrawableChild(
-                ButtonWidget.builder(Text.literal("Reroll"), button -> {
+        this.rerollButton = this.addRenderableWidget(
+                Button.builder(Component.literal("Reroll"), button -> {
                     this.targetItem = ItemPool.getRandomItem(random);
                     this.showHistory = false;
                     startRolling();
                 })
-                .dimensions(rightBtnX, btnBlockY, BTN_W, BTN_H)
+                .bounds(rightBtnX, btnBlockY, BTN_W, BTN_H)
                 .build()
         );
 
         // Row 2: List, Cancel
         int row2Y = btnBlockY + BTN_H + BTN_GAP;
-        this.listButton = this.addDrawableChild(
-                ButtonWidget.builder(Text.literal("List"), button -> {
-                    this.client.setScreen(new ItemChooserScreen(this.targetItem, this.hardcore));
+        this.listButton = this.addRenderableWidget(
+                Button.builder(Component.literal("List"), button -> {
+                    this.minecraft.setScreen(new ItemChooserScreen(this.targetItem, this.hardcore));
                 })
-                .dimensions(leftBtnX, row2Y, BTN_W, BTN_H)
+                .bounds(leftBtnX, row2Y, BTN_W, BTN_H)
                 .build()
         );
 
-        this.addDrawableChild(
-                ButtonWidget.builder(Text.literal("Cancel"), button -> {
-                    this.client.setScreen(new TitleScreen());
+        this.addRenderableWidget(
+                Button.builder(Component.literal("Cancel"), button -> {
+                    this.minecraft.setScreen(new TitleScreen());
                 })
-                .dimensions(rightBtnX, row2Y, BTN_W, BTN_H)
+                .bounds(rightBtnX, row2Y, BTN_W, BTN_H)
                 .build()
         );
 
         // Hardcore checkbox — centered below buttons
         int checkboxY = row2Y + BTN_H + GAP_MEDIUM;
-        this.addDrawableChild(
-                CheckboxWidget.builder(Text.literal("Hardcore"), this.textRenderer)
+        this.addRenderableWidget(
+                Checkbox.builder(Component.literal("Hardcore"), this.getFont())
                         .pos(centerX - 30, checkboxY)
-                        .checked(this.hardcore)
-                        .callback((checkbox, checked) -> this.hardcore = checked)
+                        .selected(this.hardcore)
+                        .onValueChange((checkbox, checked) -> this.hardcore = checked)
                         .build()
         );
 
@@ -205,8 +208,8 @@ public class SpawnHuntScreen extends Screen {
 
             // Play click sound for each intermediate item (not the final reveal)
             if (!isFinal) {
-                MinecraftClient.getInstance().getSoundManager()
-                        .play(PositionedSoundInstance.ui(SoundEvents.UI_BUTTON_CLICK.value(), 1.0f));
+                Minecraft.getInstance().getSoundManager()
+                        .play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK.value(), 1.0f));
             }
 
             // Stop rolling when we reach the final item
@@ -225,7 +228,7 @@ public class SpawnHuntScreen extends Screen {
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         // Deferred roll start (sound manager not available in constructor)
         if (rollPending) {
             rollPending = false;
@@ -238,22 +241,22 @@ public class SpawnHuntScreen extends Screen {
         // Dark background
         context.fill(0, 0, this.width, this.height, 0xC0000000);
 
-        super.render(context, mouseX, mouseY, delta);
+        super.extractRenderState(context, mouseX, mouseY, delta);
 
         int centerX = this.width / 2;
         int topY = (this.height - TOTAL_HEIGHT) / 2;
         int curY = topY;
 
         // Title
-        Text title = Text.literal("SpawnHunt");
-        context.drawText(this.textRenderer, title,
-                centerX - this.textRenderer.getWidth(title) / 2, curY, 0xFFFFFFFF, true);
+        Component title = Component.literal("SpawnHunt");
+        context.text(this.getFont(), title,
+                centerX - this.getFont().width(title) / 2, curY, 0xFFFFFFFF, true);
         curY += TEXT_H + GAP_SMALL;
 
         // Subtitle
-        Text subtitle = Text.literal("Your target:");
-        context.drawText(this.textRenderer, subtitle,
-                centerX - this.textRenderer.getWidth(subtitle) / 2, curY, 0xFFAAAAAA, true);
+        Component subtitle = Component.literal("Your target:");
+        context.text(this.getFont(), subtitle,
+                centerX - this.getFont().width(subtitle) / 2, curY, 0xFFAAAAAA, true);
         curY += TEXT_H + GAP_MEDIUM;
 
         // Icon area (or history panels)
@@ -271,30 +274,34 @@ public class SpawnHuntScreen extends Screen {
                 iconY = (int) (iconAreaY + bob);
             }
 
-            context.getMatrices().pushMatrix();
-            context.getMatrices().translate((float) (centerX - ICON_SIZE / 2), (float) iconY);
-            context.getMatrices().scale((float) ICON_SCALE, (float) ICON_SCALE);
-            context.drawItem(new ItemStack(displayItem), 0, 0);
-            context.getMatrices().popMatrix();
+            if (displayItem != cachedStackItem) {
+                cachedStackItem = displayItem;
+                cachedDisplayStack = new ItemStack(displayItem);
+            }
+            context.pose().pushMatrix();
+            context.pose().translate((float) (centerX - ICON_SIZE / 2), (float) iconY);
+            context.pose().scale((float) ICON_SCALE, (float) ICON_SCALE);
+            context.item(cachedDisplayStack, 0, 0);
+            context.pose().popMatrix();
         }
         curY += ICON_SIZE + GAP_SMALL;
 
         // Item name
-        Text itemName = ItemPool.getDisplayName(displayItem);
+        Component itemName = ItemPool.getDisplayName(displayItem);
         int nameColor = isRolling ? 0xFF888888 : 0xFFFFFF00;
-        context.drawText(this.textRenderer, itemName,
-                centerX - this.textRenderer.getWidth(itemName) / 2, curY, nameColor, true);
+        context.text(this.getFont(), itemName,
+                centerX - this.getFont().width(itemName) / 2, curY, nameColor, true);
         curY += TEXT_H + GAP_SMALL;
 
         // History toggle link (hidden during rolling)
         if (!isRolling) {
-            Text linkText = Text.literal(showHistory ? "< Back" : "History >");
-            int linkW = this.textRenderer.getWidth(linkText);
+            Component linkText = Component.literal(showHistory ? "< Back" : "History >");
+            int linkW = this.getFont().width(linkText);
             int linkX = centerX - linkW / 2;
             boolean hovering = mouseX >= linkX && mouseX <= linkX + linkW
                     && mouseY >= curY && mouseY <= curY + TEXT_H;
             int linkColor = hovering ? 0xFF88CCFF : 0xFF6699CC;
-            context.drawText(this.textRenderer, linkText, linkX, curY, linkColor, true);
+            context.text(this.getFont(), linkText, linkX, curY, linkColor, true);
 
             historyLinkX = linkX;
             historyLinkY = curY;
@@ -307,8 +314,8 @@ public class SpawnHuntScreen extends Screen {
         }
     }
 
-    private void renderHistoryArea(DrawContext context, int centerX, int areaY) {
-        Identifier itemId = Registries.ITEM.getId(targetItem);
+    private void renderHistoryArea(GuiGraphicsExtractor context, int centerX, int areaY) {
+        Identifier itemId = BuiltInRegistries.ITEM.getKey(targetItem);
         List<ResultStore.RunResult> lastRuns = ResultStore.getLastRuns(itemId, 3);
         List<ResultStore.RunResult> topRuns = ResultStore.getTopRuns(itemId, 3);
 
@@ -330,27 +337,27 @@ public class SpawnHuntScreen extends Screen {
     }
 
     private int computePanelWidth(String header) {
-        return (int) (this.textRenderer.getWidth(header) * PANEL_SCALE) + PANEL_PADDING * 2;
+        return (int) (this.getFont().width(header) * PANEL_SCALE) + PANEL_PADDING * 2;
     }
 
     private int computePanelHeight(int entryCount) {
-        int scaledLineHeight = (int) ((this.textRenderer.fontHeight + 2) * PANEL_SCALE);
+        int scaledLineHeight = (int) ((this.getFont().lineHeight + 2) * PANEL_SCALE);
         return PANEL_PADDING + scaledLineHeight + 2 + Math.max(entryCount, 1) * scaledLineHeight + PANEL_PADDING;
     }
 
     @Override
-    public boolean mouseClicked(Click click, boolean doubled) {
-        if (click.button() == 0 && click.x() >= historyLinkX && click.x() <= historyLinkX + historyLinkW
-                && click.y() >= historyLinkY && click.y() <= historyLinkY + historyLinkH) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean selected) {
+        if (event.button() == 0 && event.x() >= historyLinkX && event.x() <= historyLinkX + historyLinkW
+                && event.y() >= historyLinkY && event.y() <= historyLinkY + historyLinkH) {
             showHistory = !showHistory;
             return true;
         }
-        return super.mouseClicked(click, doubled);
+        return super.mouseClicked(event, selected);
     }
 
-    private void renderRunPanel(DrawContext context, int x, int y, String header,
+    private void renderRunPanel(GuiGraphicsExtractor context, int x, int y, String header,
                                 List<ResultStore.RunResult> runs, int panelW) {
-        int scaledLineHeight = (int) ((this.textRenderer.fontHeight + 2) * PANEL_SCALE);
+        int scaledLineHeight = (int) ((this.getFont().lineHeight + 2) * PANEL_SCALE);
         int panelH = PANEL_PADDING + scaledLineHeight + 2 + Math.max(runs.size(), 1) * scaledLineHeight + PANEL_PADDING;
 
         // Background + border
@@ -358,33 +365,33 @@ public class SpawnHuntScreen extends Screen {
         drawPanelBorder(context, x, y, panelW, panelH);
 
         // Header (scaled)
-        context.getMatrices().pushMatrix();
-        context.getMatrices().translate((float) (x + PANEL_PADDING), (float) (y + PANEL_PADDING));
-        context.getMatrices().scale(PANEL_SCALE, PANEL_SCALE);
-        context.drawText(this.textRenderer, header, 0, 0, 0xFFFFFFFF, true);
-        context.getMatrices().popMatrix();
+        context.pose().pushMatrix();
+        context.pose().translate((float) (x + PANEL_PADDING), (float) (y + PANEL_PADDING));
+        context.pose().scale(PANEL_SCALE, PANEL_SCALE);
+        context.text(this.getFont(), header, 0, 0, 0xFFFFFFFF, true);
+        context.pose().popMatrix();
 
         int entryY = y + PANEL_PADDING + scaledLineHeight + 2;
 
         if (runs.isEmpty()) {
-            context.getMatrices().pushMatrix();
-            context.getMatrices().translate((float) (x + PANEL_PADDING), (float) entryY);
-            context.getMatrices().scale(PANEL_SCALE, PANEL_SCALE);
-            context.drawText(this.textRenderer, "No runs yet", 0, 0, 0xFF888888, true);
-            context.getMatrices().popMatrix();
+            context.pose().pushMatrix();
+            context.pose().translate((float) (x + PANEL_PADDING), (float) entryY);
+            context.pose().scale(PANEL_SCALE, PANEL_SCALE);
+            context.text(this.getFont(), "No runs yet", 0, 0, 0xFF888888, true);
+            context.pose().popMatrix();
         } else {
             for (int i = 0; i < runs.size(); i++) {
                 String entry = (i + 1) + ". " + HuntState.formatTime(runs.get(i).timeMs);
-                context.getMatrices().pushMatrix();
-                context.getMatrices().translate((float) (x + PANEL_PADDING), (float) (entryY + i * scaledLineHeight));
-                context.getMatrices().scale(PANEL_SCALE, PANEL_SCALE);
-                context.drawText(this.textRenderer, entry, 0, 0, 0xFFDDDDDD, true);
-                context.getMatrices().popMatrix();
+                context.pose().pushMatrix();
+                context.pose().translate((float) (x + PANEL_PADDING), (float) (entryY + i * scaledLineHeight));
+                context.pose().scale(PANEL_SCALE, PANEL_SCALE);
+                context.text(this.getFont(), entry, 0, 0, 0xFFDDDDDD, true);
+                context.pose().popMatrix();
             }
         }
     }
 
-    private static void drawPanelBorder(DrawContext context, int x, int y, int w, int h) {
+    private static void drawPanelBorder(GuiGraphicsExtractor context, int x, int y, int w, int h) {
         context.fill(x, y, x + w, y + 1, PANEL_BORDER);         // top
         context.fill(x, y + h - 1, x + w, y + h, PANEL_BORDER); // bottom
         context.fill(x, y, x + 1, y + h, PANEL_BORDER);         // left

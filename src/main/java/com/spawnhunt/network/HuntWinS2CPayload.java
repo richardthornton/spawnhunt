@@ -1,39 +1,39 @@
 package com.spawnhunt.network;
 
-import net.minecraft.network.RegistryByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.packet.CustomPayload;
-import net.minecraft.util.Identifier;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.Identifier;
 
 public record HuntWinS2CPayload(
         String winnerName,
         long finalTimeMs,
         String targetItemId
-) implements CustomPayload {
+) implements CustomPacketPayload {
 
-    public static final Id<HuntWinS2CPayload> ID =
-            new Id<>(Identifier.of("spawnhunt", "hunt_win"));
+    public static final Type<HuntWinS2CPayload> ID =
+            new Type<>(Identifier.fromNamespaceAndPath("spawnhunt", "hunt_win"));
 
-    public static final PacketCodec<RegistryByteBuf, HuntWinS2CPayload> CODEC = new PacketCodec<>() {
+    public static final StreamCodec<RegistryFriendlyByteBuf, HuntWinS2CPayload> CODEC = new StreamCodec<>() {
         @Override
-        public HuntWinS2CPayload decode(RegistryByteBuf buf) {
+        public HuntWinS2CPayload decode(RegistryFriendlyByteBuf buf) {
             return new HuntWinS2CPayload(
-                    buf.readString(64),
+                    buf.readUtf(64),
                     buf.readLong(),
-                    buf.readString(256)
+                    buf.readUtf(256)
             );
         }
 
         @Override
-        public void encode(RegistryByteBuf buf, HuntWinS2CPayload payload) {
-            buf.writeString(payload.winnerName);
+        public void encode(RegistryFriendlyByteBuf buf, HuntWinS2CPayload payload) {
+            buf.writeUtf(payload.winnerName);
             buf.writeLong(payload.finalTimeMs);
-            buf.writeString(payload.targetItemId);
+            buf.writeUtf(payload.targetItemId);
         }
     };
 
     @Override
-    public Id<? extends CustomPayload> getId() {
+    public Type<? extends CustomPacketPayload> type() {
         return ID;
     }
 }
