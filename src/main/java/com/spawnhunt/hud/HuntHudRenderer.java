@@ -28,6 +28,12 @@ public class HuntHudRenderer {
     private static ItemStack cachedStack = null;
     private static Component cachedDisplayName = null;
 
+    public static void resetCache() {
+        cachedTargetId = null;
+        cachedStack = null;
+        cachedDisplayName = null;
+    }
+
     public static void extractRenderState(GuiGraphicsExtractor context, DeltaTracker deltaTracker) {
         Minecraft client = Minecraft.getInstance();
         if (client.player == null) return;
