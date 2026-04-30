@@ -148,7 +148,7 @@ Uses [SemVer](https://semver.org/). Version is set in `gradle.properties` (`mod_
 | Version | Date       | Notes                                    |
 |---------|------------|------------------------------------------|
 | 3.0.0 | 2026-04-16 | Port to MC 26.1: Java 25, Mojang mappings, HudElementRegistry, unobfuscated build |
-| 2.2.1 | 2026-03-23 |  |
+| 2.2.1 | 2026-03-23 | Server players can immediately start a new hunt after winning |
 | 2.2.0 | 2026-03-22 | Slot machine rolling animation |
 | 2.1.0 | 2026-03-17 | Lock to survival during active singleplayer hunts |
 | 2.0.0 | 2026-03-16 | Multiplayer support: server commands, HUD sync, vanilla client action bar |

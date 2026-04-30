@@ -63,6 +63,8 @@ public class SpawnHuntScreen extends Screen {
     private List<Item> rollItems;      // items to display at each tick index
     private int rollIndex;
     private Item displayItem;          // item currently shown (rolling item or final target)
+    private Item cachedStackItem;      // item the cached ItemStack was built for
+    private ItemStack cachedDisplayStack;
 
     // Button references for enabling/disabling during roll
     private Button startButton;
@@ -272,10 +274,14 @@ public class SpawnHuntScreen extends Screen {
                 iconY = (int) (iconAreaY + bob);
             }
 
+            if (displayItem != cachedStackItem) {
+                cachedStackItem = displayItem;
+                cachedDisplayStack = new ItemStack(displayItem);
+            }
             context.pose().pushMatrix();
             context.pose().translate((float) (centerX - ICON_SIZE / 2), (float) iconY);
             context.pose().scale((float) ICON_SCALE, (float) ICON_SCALE);
-            context.item(new ItemStack(displayItem), 0, 0);
+            context.item(cachedDisplayStack, 0, 0);
             context.pose().popMatrix();
         }
         curY += ICON_SIZE + GAP_SMALL;
@@ -341,8 +347,8 @@ public class SpawnHuntScreen extends Screen {
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean selected) {
-        if (event.button() == 0 && (int) event.x() >= historyLinkX && (int) event.x() <= historyLinkX + historyLinkW
-                && (int) event.y() >= historyLinkY && (int) event.y() <= historyLinkY + historyLinkH) {
+        if (event.button() == 0 && event.x() >= historyLinkX && event.x() <= historyLinkX + historyLinkW
+                && event.y() >= historyLinkY && event.y() <= historyLinkY + historyLinkH) {
             showHistory = !showHistory;
             return true;
         }

@@ -98,21 +98,36 @@ public class ItemPool {
      * created pre-world for the selection screen. Vanilla overwrites with full
      * data-driven components during world load.
      */
+    private static boolean componentsBound = false;
+
     public static void ensureComponentsBound() {
+        if (componentsBound) return;
         int bound = 0;
+        int failed = 0;
         for (Item item : BuiltInRegistries.ITEM) {
             if (!item.builtInRegistryHolder().areComponentsBound()) {
                 Identifier id = BuiltInRegistries.ITEM.getKey(item);
-                DataComponentMap components = DataComponentMap.builder()
-                        .set(DataComponents.ITEM_MODEL, id)
-                        .build();
-                item.builtInRegistryHolder().bindComponents(components);
-                bound++;
+                try {
+                    DataComponentMap components = DataComponentMap.builder()
+                            .set(DataComponents.ITEM_MODEL, id)
+                            .build();
+                    item.builtInRegistryHolder().bindComponents(components);
+                    bound++;
+                } catch (Throwable t) {
+                    // Defensive: if the component-binding API changes in a future MC patch,
+                    // skip the offending item rather than crash the title screen.
+                    failed++;
+                    SpawnHuntMod.LOGGER.warn("SpawnHunt: failed to pre-bind components for {}: {}", id, t.toString());
+                }
             }
         }
         if (bound > 0) {
             SpawnHuntMod.LOGGER.info("SpawnHunt: pre-bound model components for {} items (pre-world rendering)", bound);
         }
+        if (failed > 0) {
+            SpawnHuntMod.LOGGER.warn("SpawnHunt: {} items failed component pre-binding", failed);
+        }
+        componentsBound = true;
     }
 
     private static final String MUSIC_DISC_PREFIX = "music_disc_";

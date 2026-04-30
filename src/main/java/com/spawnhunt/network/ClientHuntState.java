@@ -28,7 +28,8 @@ public class ClientHuntState {
         won = true;
         winnerName = payload.winnerName();
         finalTimeMs = payload.finalTimeMs();
-        targetItem = Identifier.tryParse(payload.targetItemId());
+        targetItem = !payload.targetItemId().isEmpty()
+                ? Identifier.tryParse(payload.targetItemId()) : null;
     }
 
     public static void reset() {

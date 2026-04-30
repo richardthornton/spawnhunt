@@ -23,9 +23,16 @@ public class HuntHudRenderer {
     private static final int BEST_COLOR = 0xFFAAFFAA;
     private static final int WIN_NAME_COLOR = 0xFF55FF55;
 
-    // Cached ItemStack — only recreated when targetId changes
+    // Cached ItemStack + display name — only recomputed when targetId changes
     private static Identifier cachedTargetId = null;
     private static ItemStack cachedStack = null;
+    private static Component cachedDisplayName = null;
+
+    public static void resetCache() {
+        cachedTargetId = null;
+        cachedStack = null;
+        cachedDisplayName = null;
+    }
 
     public static void extractRenderState(GuiGraphicsExtractor context, DeltaTracker deltaTracker) {
         Minecraft client = Minecraft.getInstance();
@@ -60,9 +67,11 @@ public class HuntHudRenderer {
 
         if (!targetId.equals(cachedTargetId)) {
             cachedTargetId = targetId;
-            cachedStack = new ItemStack(BuiltInRegistries.ITEM.getValue(targetId));
+            Item item = BuiltInRegistries.ITEM.getValue(targetId);
+            cachedStack = new ItemStack(item);
+            cachedDisplayName = ItemPool.getDisplayName(item);
         }
-        Component itemName = ItemPool.getDisplayName(BuiltInRegistries.ITEM.getValue(targetId));
+        Component itemName = cachedDisplayName;
 
         int screenWidth = Minecraft.getInstance().getWindow().getGuiScaledWidth();
         int centreX = screenWidth / 2;
