@@ -341,8 +341,8 @@ public class SpawnHuntScreen extends Screen {
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean selected) {
-        if (event.button() == 0 && (int) event.x() >= historyLinkX && (int) event.x() <= historyLinkX + historyLinkW
-                && (int) event.y() >= historyLinkY && (int) event.y() <= historyLinkY + historyLinkH) {
+        if (event.button() == 0 && event.x() >= historyLinkX && event.x() <= historyLinkX + historyLinkW
+                && event.y() >= historyLinkY && event.y() <= historyLinkY + historyLinkH) {
             showHistory = !showHistory;
             return true;
         }
