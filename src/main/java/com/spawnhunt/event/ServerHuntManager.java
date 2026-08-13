@@ -18,6 +18,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
 import net.minecraft.resources.Identifier;
 
+import java.util.Optional;
+
 public class ServerHuntManager {
 
     private static int tickCounter = 0;
@@ -112,7 +114,7 @@ public class ServerHuntManager {
         HuntWinS2CPayload winPayload = new HuntWinS2CPayload(
                 winner.getName().getString(),
                 ServerHuntState.getFinalTimeMs(),
-                targetId.toString()
+                targetId
         );
 
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
@@ -162,7 +164,7 @@ public class ServerHuntManager {
     private static HuntSyncS2CPayload buildSyncPayload() {
         return new HuntSyncS2CPayload(
                 ServerHuntState.isActive(),
-                ServerHuntState.getTargetId() != null ? ServerHuntState.getTargetId().toString() : "",
+                Optional.ofNullable(ServerHuntState.getTargetId()),
                 ServerHuntState.getElapsedMs(),
                 ServerHuntState.isWon(),
                 ServerHuntState.getWinnerName(),
@@ -174,7 +176,7 @@ public class ServerHuntManager {
      * Sends an inactive sync payload to all mod clients (used when hunt is stopped).
      */
     public static void sendStopSync(MinecraftServer server) {
-        HuntSyncS2CPayload payload = new HuntSyncS2CPayload(false, "", 0, false, "", 0);
+        HuntSyncS2CPayload payload = new HuntSyncS2CPayload(false, Optional.empty(), 0, false, "", 0);
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             if (ServerPlayNetworking.canSend(player, HuntSyncS2CPayload.ID)) {
                 ServerPlayNetworking.send(player, payload);

@@ -1,45 +1,42 @@
 package com.spawnhunt.network;
 
+import io.netty.buffer.ByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 
+import java.util.Optional;
+
 public record HuntSyncS2CPayload(
         boolean active,
-        String targetItemId,
+        Optional<Identifier> targetItem,
         long elapsedMs,
         boolean won,
         String winnerName,
         long finalTimeMs
 ) implements CustomPacketPayload {
 
+    /** Vanilla caps player names at 16; 64 leaves room without inviting abuse. */
+    static final int MAX_NAME_LENGTH = 64;
+
     public static final Type<HuntSyncS2CPayload> ID =
             new Type<>(Identifier.fromNamespaceAndPath("spawnhunt", "hunt_sync"));
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, HuntSyncS2CPayload> CODEC = new StreamCodec<>() {
-        @Override
-        public HuntSyncS2CPayload decode(RegistryFriendlyByteBuf buf) {
-            return new HuntSyncS2CPayload(
-                    buf.readBoolean(),
-                    buf.readUtf(256),
-                    buf.readLong(),
-                    buf.readBoolean(),
-                    buf.readUtf(64),
-                    buf.readLong()
-            );
-        }
+    static final StreamCodec<ByteBuf, Optional<Identifier>> OPTIONAL_ITEM_ID =
+            ByteBufCodecs.optional(Identifier.STREAM_CODEC);
 
-        @Override
-        public void encode(RegistryFriendlyByteBuf buf, HuntSyncS2CPayload payload) {
-            buf.writeBoolean(payload.active);
-            buf.writeUtf(payload.targetItemId);
-            buf.writeLong(payload.elapsedMs);
-            buf.writeBoolean(payload.won);
-            buf.writeUtf(payload.winnerName);
-            buf.writeLong(payload.finalTimeMs);
-        }
-    };
+    public static final StreamCodec<RegistryFriendlyByteBuf, HuntSyncS2CPayload> CODEC =
+            StreamCodec.composite(
+                    ByteBufCodecs.BOOL, HuntSyncS2CPayload::active,
+                    OPTIONAL_ITEM_ID, HuntSyncS2CPayload::targetItem,
+                    ByteBufCodecs.VAR_LONG, HuntSyncS2CPayload::elapsedMs,
+                    ByteBufCodecs.BOOL, HuntSyncS2CPayload::won,
+                    ByteBufCodecs.stringUtf8(MAX_NAME_LENGTH), HuntSyncS2CPayload::winnerName,
+                    ByteBufCodecs.VAR_LONG, HuntSyncS2CPayload::finalTimeMs,
+                    HuntSyncS2CPayload::new
+            );
 
     @Override
     public Type<? extends CustomPacketPayload> type() {

@@ -19,8 +19,7 @@ public class ClientHuntState {
 
     public static void update(HuntSyncS2CPayload payload) {
         active = payload.active();
-        targetItem = (payload.active() && !payload.targetItemId().isEmpty())
-                ? Identifier.tryParse(payload.targetItemId()) : null;
+        targetItem = payload.active() ? payload.targetItem().orElse(null) : null;
         elapsedMs = payload.elapsedMs();
         won = payload.won();
         winnerName = payload.winnerName();
@@ -31,8 +30,7 @@ public class ClientHuntState {
         won = true;
         winnerName = payload.winnerName();
         finalTimeMs = payload.finalTimeMs();
-        targetItem = !payload.targetItemId().isEmpty()
-                ? Identifier.tryParse(payload.targetItemId()) : null;
+        targetItem = payload.targetItem();
     }
 
     public static void reset() {
