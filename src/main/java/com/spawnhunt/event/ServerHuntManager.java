@@ -5,6 +5,7 @@ import com.spawnhunt.data.ItemPool;
 import com.spawnhunt.data.ServerHuntState;
 import com.spawnhunt.network.HuntSyncS2CPayload;
 import com.spawnhunt.network.HuntWinS2CPayload;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -32,6 +33,14 @@ public class ServerHuntManager {
                     ServerPlayNetworking.send(player, buildSyncPayload());
                 }
             }
+        });
+
+        // ServerHuntState is a static singleton, so it outlives the integrated server.
+        // Without this, a hunt started in one singleplayer/LAN world stays active in the
+        // next world opened, with the timer still running through the main menu.
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+            ServerHuntState.reset();
+            tickCounter = 0;
         });
     }
 
@@ -66,6 +75,11 @@ public class ServerHuntManager {
         Item targetItem = BuiltInRegistries.ITEM.getValue(targetId);
 
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            // Creative players can pull the target straight out of the creative
+            // inventory, and spectators can't legitimately hold items at all.
+            // GameType.isSurvival() covers survival and adventure.
+            if (!player.gameMode().isSurvival()) continue;
+
             for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
                 ItemStack stack = player.getInventory().getItem(i);
                 if (!stack.isEmpty() && stack.getItem() == targetItem) {
