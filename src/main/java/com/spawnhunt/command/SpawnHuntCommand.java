@@ -126,8 +126,7 @@ public class SpawnHuntCommand {
     }
 
     private static int doStart(CommandContext<CommandSourceStack> context, Item item) {
-        Identifier itemId = BuiltInRegistries.ITEM.getKey(item);
-        ServerHuntState.start(itemId);
+        ServerHuntState.start(item);
 
         Component itemName = ItemPool.getDisplayName(item);
         Component message = Component.empty()
@@ -150,9 +149,7 @@ public class SpawnHuntCommand {
             return 1;
         }
 
-        Identifier targetId = ServerHuntState.getTargetItem();
-        Item item = BuiltInRegistries.ITEM.getValue(targetId);
-        Component itemName = ItemPool.getDisplayName(item);
+        Component itemName = ItemPool.getDisplayName(ServerHuntState.getTargetItem());
         String timeStr = HuntState.formatTimeSeconds(ServerHuntState.getElapsedMs());
         int playerCount = context.getSource().getServer().getPlayerCount();
 

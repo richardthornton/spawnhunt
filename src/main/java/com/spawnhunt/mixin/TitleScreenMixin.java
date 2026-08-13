@@ -1,5 +1,6 @@
 package com.spawnhunt.mixin;
 
+import com.spawnhunt.data.HuntState;
 import com.spawnhunt.screen.SpawnHuntScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -20,6 +21,14 @@ public abstract class TitleScreenMixin extends Screen {
 
     @Inject(method = "init", at = @At("TAIL"))
     private void addSpawnHuntButton(CallbackInfo ci) {
+        // The Start button arms a hunt, but the timer only begins on world join.
+        // Being back at the title screen with an armed-but-unstarted hunt means
+        // world creation never completed — clear it so it doesn't latch onto the
+        // next world or server joined.
+        if (HuntState.isActive() && !HuntState.hasTimerStarted()) {
+            HuntState.reset();
+        }
+
         this.addRenderableWidget(
                 Button.builder(Component.literal("SpawnHunt"), button -> {
                     Minecraft.getInstance().setScreen(new SpawnHuntScreen());

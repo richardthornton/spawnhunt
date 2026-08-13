@@ -3,6 +3,7 @@ package com.spawnhunt.event;
 import com.spawnhunt.SpawnHuntMod;
 import com.spawnhunt.data.HuntState;
 import com.spawnhunt.data.ResultStore;
+import com.spawnhunt.hud.HuntHudRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.item.Item;
@@ -30,6 +31,7 @@ public class InventoryListener {
             if (!stack.isEmpty() && stack.getItem() == targetItem) {
                 HuntState.win();
                 ResultStore.recordResult(targetId, HuntState.getFinalTimeMs());
+                HuntHudRenderer.invalidateBestTime();
                 player.playSound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
                 SpawnHuntMod.LOGGER.info("SpawnHunt: WIN! Found {} in {}",
                         targetId, HuntState.formatTime(HuntState.getFinalTimeMs()));

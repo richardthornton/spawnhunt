@@ -5,18 +5,20 @@ import com.spawnhunt.data.ItemPool;
 import com.spawnhunt.data.ServerHuntState;
 import com.spawnhunt.network.HuntSyncS2CPayload;
 import com.spawnhunt.network.HuntWinS2CPayload;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
 import net.minecraft.resources.Identifier;
+
+import java.util.Optional;
 
 public class ServerHuntManager {
 
@@ -33,6 +35,14 @@ public class ServerHuntManager {
                 }
             }
         });
+
+        // ServerHuntState is a static singleton, so it outlives the integrated server.
+        // Without this, a hunt started in one singleplayer/LAN world stays active in the
+        // next world opened, with the timer still running through the main menu.
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+            ServerHuntState.reset();
+            tickCounter = 0;
+        });
     }
 
     private static void onServerTick(MinecraftServer server) {
@@ -48,8 +58,10 @@ public class ServerHuntManager {
             scanInventories(server);
         }
 
-        // Broadcast to mod clients every 5 ticks (~250ms)
-        if (tickCounter % 5 == 0) {
+        // Broadcast to mod clients every 5 ticks (~250ms). Once won the state is
+        // frozen: handleWin already sent the final sync and late joiners get one
+        // on JOIN, so periodic syncs would just repeat the same payload forever.
+        if (!ServerHuntState.isWon() && tickCounter % 5 == 0) {
             broadcastSyncToModClients(server);
         }
 
@@ -60,12 +72,15 @@ public class ServerHuntManager {
     }
 
     private static void scanInventories(MinecraftServer server) {
-        Identifier targetId = ServerHuntState.getTargetItem();
-        if (targetId == null) return;
-
-        Item targetItem = BuiltInRegistries.ITEM.getValue(targetId);
+        Item targetItem = ServerHuntState.getTargetItem();
+        if (targetItem == null) return;
 
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            // Creative players can pull the target straight out of the creative
+            // inventory, and spectators can't legitimately hold items at all.
+            // GameType.isSurvival() covers survival and adventure.
+            if (!player.gameMode().isSurvival()) continue;
+
             for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
                 ItemStack stack = player.getInventory().getItem(i);
                 if (!stack.isEmpty() && stack.getItem() == targetItem) {
@@ -79,9 +94,8 @@ public class ServerHuntManager {
     private static void handleWin(MinecraftServer server, ServerPlayer winner) {
         ServerHuntState.win(winner);
 
-        Identifier targetId = ServerHuntState.getTargetItem();
-        Item item = BuiltInRegistries.ITEM.getValue(targetId);
-        Component itemName = ItemPool.getDisplayName(item);
+        Identifier targetId = ServerHuntState.getTargetId();
+        Component itemName = ItemPool.getDisplayName(ServerHuntState.getTargetItem());
         String timeStr = HuntState.formatTimeSeconds(ServerHuntState.getFinalTimeMs());
 
         // Chat message to all players
@@ -100,7 +114,7 @@ public class ServerHuntManager {
         HuntWinS2CPayload winPayload = new HuntWinS2CPayload(
                 winner.getName().getString(),
                 ServerHuntState.getFinalTimeMs(),
-                targetId.toString()
+                targetId
         );
 
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
@@ -127,10 +141,9 @@ public class ServerHuntManager {
     private static void broadcastActionBarToVanillaClients(MinecraftServer server) {
         if (!ServerHuntState.isActive() || ServerHuntState.isWon()) return;
 
-        Identifier targetId = ServerHuntState.getTargetItem();
-        if (targetId == null) return;
+        Item item = ServerHuntState.getTargetItem();
+        if (item == null) return;
 
-        Item item = BuiltInRegistries.ITEM.getValue(targetId);
         Component itemName = ItemPool.getDisplayName(item);
         String timeStr = HuntState.formatTimeSeconds(ServerHuntState.getElapsedMs());
 
@@ -151,7 +164,7 @@ public class ServerHuntManager {
     private static HuntSyncS2CPayload buildSyncPayload() {
         return new HuntSyncS2CPayload(
                 ServerHuntState.isActive(),
-                ServerHuntState.getTargetItem() != null ? ServerHuntState.getTargetItem().toString() : "",
+                Optional.ofNullable(ServerHuntState.getTargetId()),
                 ServerHuntState.getElapsedMs(),
                 ServerHuntState.isWon(),
                 ServerHuntState.getWinnerName(),
@@ -163,7 +176,7 @@ public class ServerHuntManager {
      * Sends an inactive sync payload to all mod clients (used when hunt is stopped).
      */
     public static void sendStopSync(MinecraftServer server) {
-        HuntSyncS2CPayload payload = new HuntSyncS2CPayload(false, "", 0, false, "", 0);
+        HuntSyncS2CPayload payload = new HuntSyncS2CPayload(false, Optional.empty(), 0, false, "", 0);
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             if (ServerPlayNetworking.canSend(player, HuntSyncS2CPayload.ID)) {
                 ServerPlayNetworking.send(player, payload);
@@ -175,8 +188,6 @@ public class ServerHuntManager {
      * Sends a chat message to all players on the server.
      */
     public static void broadcastMessage(MinecraftServer server, Component message) {
-        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-            player.sendSystemMessage(message);
-        }
+        server.getPlayerList().broadcastSystemMessage(message, false);
     }
 }

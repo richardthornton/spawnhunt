@@ -28,10 +28,21 @@ public class HuntHudRenderer {
     private static ItemStack cachedStack = null;
     private static Component cachedDisplayName = null;
 
+    // Cached personal best — re-read from ResultStore on target change and after a win
+    private static long cachedBestTimeMs = -1;
+    private static boolean bestTimeDirty = true;
+
     public static void resetCache() {
         cachedTargetId = null;
         cachedStack = null;
         cachedDisplayName = null;
+        cachedBestTimeMs = -1;
+        bestTimeDirty = true;
+    }
+
+    /** Called after a run is recorded so the "Best:" line picks up the new time. */
+    public static void invalidateBestTime() {
+        bestTimeDirty = true;
     }
 
     public static void extractRenderState(GuiGraphicsExtractor context, DeltaTracker deltaTracker) {
@@ -70,6 +81,7 @@ public class HuntHudRenderer {
             Item item = BuiltInRegistries.ITEM.getValue(targetId);
             cachedStack = new ItemStack(item);
             cachedDisplayName = ItemPool.getDisplayName(item);
+            bestTimeDirty = true;
         }
         Component itemName = cachedDisplayName;
 
@@ -114,9 +126,12 @@ public class HuntHudRenderer {
 
         // Best time (singleplayer only)
         if (singleplayer) {
-            long bestTimeMs = ResultStore.getBestTime(targetId);
-            if (bestTimeMs >= 0) {
-                String bestStr = "Best: " + HuntState.formatTime(bestTimeMs);
+            if (bestTimeDirty) {
+                cachedBestTimeMs = ResultStore.getBestTime(targetId);
+                bestTimeDirty = false;
+            }
+            if (cachedBestTimeMs >= 0) {
+                String bestStr = "Best: " + HuntState.formatTime(cachedBestTimeMs);
                 float bestWidthF = font.width(bestStr) * BEST_SCALE;
                 context.pose().pushMatrix();
                 context.pose().translate(centreX - bestWidthF / 2f, (float) y);
