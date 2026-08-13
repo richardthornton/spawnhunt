@@ -70,7 +70,7 @@ public class ItemChooserScreen extends Screen {
     void selectAndReturn() {
         ItemListWidget.Entry entry = itemList.getSelected();
         if (entry != null) {
-            this.minecraft.setScreen(new SpawnHuntScreen(entry.getItem(), this.hardcore));
+            this.minecraft.gui.setScreen(new SpawnHuntScreen(entry.getItem(), this.hardcore));
         }
     }
 
@@ -105,7 +105,7 @@ public class ItemChooserScreen extends Screen {
 
     @Override
     public void onClose() {
-        this.minecraft.setScreen(new SpawnHuntScreen(currentItem, this.hardcore));
+        this.minecraft.gui.setScreen(new SpawnHuntScreen(currentItem, this.hardcore));
     }
 
     class ItemListWidget extends ObjectSelectionList<ItemListWidget.Entry> {

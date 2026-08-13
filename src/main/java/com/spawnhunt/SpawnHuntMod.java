@@ -42,7 +42,7 @@ public class SpawnHuntMod implements ClientModInitializer {
         // Tick the timer and check inventory each client tick
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (HuntState.isActive() && !HuntState.isWon() && client.player != null) {
-                boolean paused = client.isPaused() || client.screen instanceof DeathScreen;
+                boolean paused = client.isPaused() || client.gui.screen() instanceof DeathScreen;
                 HuntState.tick(paused);
                 InventoryListener.tick(client);
             }

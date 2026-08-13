@@ -1,3 +1,12 @@
+## v4.0.0
+
+26.2 support is here! Go hunt some sulfur...
+
+### Added
+
+- SpawnHunt now supports Minecraft Java Edition version 26.2
+- All 31 new blocks and items from Chaos Cubed are in the hunt pool, including the cinnabar and sulfur building sets, potent sulfur, sulfur spikes, the sulfur cube bucket, and the new "bounce" music disc
+
 ## v3.1.0
 
 This is a quality of life update!
