@@ -121,6 +121,15 @@ JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-25.0.2.10-hotspot" ./gradlew bu
 - [x] M4 Client integration (ClientHuntState, packet receivers, dual-source HUD)
 - [x] M5 Polish (seconds-only timer for MP, win timer fix, action bar cleanup)
 
+### Phase H — Hardening (3.1.0, from the July 2026 code review)
+- [x] H1 Server state lifecycle (reset `ServerHuntState` + tick counter on `SERVER_STOPPED`)
+- [x] H2 Game-mode gate on multiplayer wins (survival/adventure only)
+- [x] H3 Thread safety for shared statics (concurrent name cache, volatile pool + `HuntState.active`/`won`)
+- [x] H4 Client render perf (cached entry ItemStacks, cached HUD best time, precomputed search names)
+- [x] H5 Server tick perf (pre-resolved target `Item`, no periodic sync after a win)
+- [x] H6 Composite payload codecs (`Identifier.STREAM_CODEC`, symmetric string bounds)
+- [x] H7 Hygiene (vanilla broadcast, stale armed-hunt guard on the title screen)
+
 ## Key Design Decisions
 
 - **State is not persisted** — exiting the world ends the hunt. Crash = hunt over.
@@ -138,6 +147,16 @@ JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-25.0.2.10-hotspot" ./gradlew bu
   skipped by the win scan. This is the dedicated-server equivalent of `GameModeLockMixin`,
   which only applies to integrated servers.
 - **Two separate state paths** — singleplayer uses `HuntState` (client static), multiplayer uses `ServerHuntState` (server) synced to `ClientHuntState` (client mirror). No shared mutable state.
+- **Thread ownership of the statics** — on integrated servers the render thread and server
+  thread share a JVM, so: `ItemPool` is touched by both (concurrent name cache, volatile
+  pool); `HuntState` is written only by the client but `active`/`won` are read from the
+  server thread by `GameModeLockMixin`, hence volatile; `ClientHuntState` is render-thread
+  only (packet handlers hand off via `client.execute`). Keep new statics in one of these
+  three buckets rather than inventing a fourth.
+- **Static state is reset on lifecycle boundaries, not on demand** — `ServerHuntState` on
+  `SERVER_STOPPED`, `HuntState`/`ClientHuntState` on client DISCONNECT, and an armed-but-
+  unstarted `HuntState` on `TitleScreen.init`. Singletons outlive the integrated server, so
+  anything not reset leaks into the next world.
 - **Vanilla client support** — players without the mod see action bar messages during active hunts and chat messages for start/stop/win events.
 - **Multiplayer commands** require OP level 2 (GAMEMASTERS); `/spawnhunt status` is available to all players.
 - **Pre-world item rendering** — MC 26.1 binds item components (including `ITEM_MODEL`) during world load, but the selection screen runs pre-world. `ItemPool.ensureComponentsBound()` binds a minimal `DataComponentMap` with `ITEM_MODEL` set to the item's registry ID so `ItemStack` creation and rendering works on the title screen. Vanilla overwrites with full data-driven components during world load.
