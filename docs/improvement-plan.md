@@ -1,5 +1,20 @@
 # SpawnHunt Improvement Plan
 
+> **Status (2026-08-13):** all six PRs are implemented on `worktree-new-version` and land
+> together as `3.1.0` rather than as separate `3.0.1` / `3.1.0` releases. Every code task
+> below is done and the build passes with JDK 25. The **manual in-game tests listed in each
+> PR have not been run** — that is the remaining work before release. Deviations from the
+> plan as written:
+>
+> - The `SERVER_STOPPED` handler lives in `ServerHuntManager.register()` rather than
+>   `SpawnHuntCommon.onInitialize()`, so it can reset `tickCounter` alongside the state.
+> - The win scan uses `player.gameMode().isSurvival()`, which admits **adventure** as well
+>   as survival (`GameType.isSurvival()` covers both) and excludes only creative and
+>   spectator — the two modes that actually break the hunt. The plan's "survival only"
+>   recommendation would have locked out legitimate adventure-mode servers.
+> - `ServerHuntState.start` now takes an `Item`; `getTargetItem()` returns the `Item` and
+>   the new `getTargetId()` returns the `Identifier`.
+
 Plan for addressing the findings from the July 2026 code review, broken into six PRs
 ordered by priority. Each PR is independently shippable and small enough to review in
 one sitting. PRs 1–2 are correctness fixes suitable for a `3.0.1` patch release;
