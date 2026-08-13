@@ -188,8 +188,6 @@ public class ServerHuntManager {
      * Sends a chat message to all players on the server.
      */
     public static void broadcastMessage(MinecraftServer server, Component message) {
-        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-            player.sendSystemMessage(message);
-        }
+        server.getPlayerList().broadcastSystemMessage(message, false);
     }
 }

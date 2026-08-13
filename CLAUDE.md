@@ -129,6 +129,14 @@ JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-25.0.2.10-hotspot" ./gradlew bu
 - **Singleplayer timer** uses delta-accumulation (not start-time subtraction) to avoid drift across pause/unpause.
 - **Multiplayer timer** uses server wall-clock (no pause concept); displayed in mm:ss format (no milliseconds).
 - **Inventory scanning** is trivially fast (36 slots + armor + offhand per tick).
+- **Cursor and crafting grid are not scanned** — an item held on the cursor or sitting in
+  the 2×2 crafting grid doesn't trigger a win until it lands in the inventory proper.
+  Deliberate: in practice that happens within moments, and scanning those containers adds
+  surface area for no real gain.
+- **Multiplayer wins require survival or adventure** — creative players can pull the target
+  from the creative inventory and spectators can't legitimately hold items, so both are
+  skipped by the win scan. This is the dedicated-server equivalent of `GameModeLockMixin`,
+  which only applies to integrated servers.
 - **Two separate state paths** — singleplayer uses `HuntState` (client static), multiplayer uses `ServerHuntState` (server) synced to `ClientHuntState` (client mirror). No shared mutable state.
 - **Vanilla client support** — players without the mod see action bar messages during active hunts and chat messages for start/stop/win events.
 - **Multiplayer commands** require OP level 2 (GAMEMASTERS); `/spawnhunt status` is available to all players.

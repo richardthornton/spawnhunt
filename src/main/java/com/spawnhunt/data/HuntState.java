@@ -64,6 +64,8 @@ public class HuntState {
     }
 
     public static boolean isActive() { return active; }
+    /** False between {@link #startHunt} and the world join that calls {@link #beginTimer}. */
+    public static boolean hasTimerStarted() { return startTimeMs != 0; }
     public static Identifier getTargetItem() { return targetItem; }
     public static long getAccumulatedMs() { return accumulatedMs; }
     public static boolean isWon() { return won; }
