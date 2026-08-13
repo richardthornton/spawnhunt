@@ -10,6 +10,10 @@ import net.minecraft.resources.Identifier;
  * {@code won} are additionally read from the server thread by
  * {@link com.spawnhunt.mixin.GameModeLockMixin} on the integrated server, so those
  * two are volatile; the rest stay client-thread-only.
+ * <p>
+ * When arming or finishing a hunt, write the volatile flag <em>last</em>: a volatile write
+ * only publishes the stores that precede it, so a reader seeing {@code active}/{@code won}
+ * is then guaranteed to see the plain fields set alongside them.
  */
 public class HuntState {
     private static volatile boolean active = false;
@@ -36,9 +40,9 @@ public class HuntState {
 
     public static void startHunt(Identifier item, boolean hardcoreMode) {
         reset();
-        active = true;
         targetItem = item;
         hardcore = hardcoreMode;
+        active = true; // volatile write last — publishes the fields above to any reader that sees it
     }
 
     public static void beginTimer() {
@@ -59,8 +63,8 @@ public class HuntState {
 
     public static void win() {
         if (!active || won) return;
-        won = true;
         finalTimeMs = accumulatedMs;
+        won = true; // volatile write last, as in startHunt
     }
 
     public static boolean isActive() { return active; }
