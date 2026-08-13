@@ -11,6 +11,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.network.chat.Component;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Maintains a cached pool of all survival-obtainable items (blocks, tools, armor, food, materials, etc.).
@@ -19,8 +20,11 @@ import java.util.*;
  * exclude unobtainables and variant-dependent items via an exclusion set + patterns.
  */
 public class ItemPool {
-    private static List<Item> pool = null;
-    private static final Map<Item, Component> displayNameCache = new HashMap<>();
+    // Touched from both the render thread (screens, HUD) and the server thread
+    // (commands, ServerHuntManager) on integrated servers, so both must be
+    // safely published: `pool` is volatile, the cache is concurrent.
+    private static volatile List<Item> pool = null;
+    private static final Map<Item, Component> displayNameCache = new ConcurrentHashMap<>();
 
     private static final Set<String> EXCLUDED = Set.of(
             // Creative-only / technical
@@ -69,10 +73,13 @@ public class ItemPool {
     }
 
     public static List<Item> getPool() {
-        if (pool == null) {
-            pool = buildPool();
+        List<Item> p = pool;
+        if (p == null) {
+            // A race here just builds the (identical, immutable) list twice.
+            p = buildPool();
+            pool = p;
         }
-        return pool;
+        return p;
     }
 
     private static List<Item> buildPool() {
@@ -138,23 +145,15 @@ public class ItemPool {
      * alone just returns "Music Disc" for all of them.
      */
     public static Component getDisplayName(Item item) {
-        Component cached = displayNameCache.get(item);
-        if (cached != null) return cached;
-
-        Identifier id = BuiltInRegistries.ITEM.getKey(item);
-        String path = id.getPath();
-
-        Component name;
-        if (path.startsWith(MUSIC_DISC_PREFIX)) {
-            String songId = path.substring(MUSIC_DISC_PREFIX.length());
-            name = Component.literal("Music Disc - " + songId);
-        } else {
+        return displayNameCache.computeIfAbsent(item, i -> {
+            String path = BuiltInRegistries.ITEM.getKey(i).getPath();
+            if (path.startsWith(MUSIC_DISC_PREFIX)) {
+                String songId = path.substring(MUSIC_DISC_PREFIX.length());
+                return Component.literal("Music Disc - " + songId);
+            }
             // Use the translation key directly — safe pre-world (no ItemStack needed)
-            name = Component.translatable(item.getDescriptionId());
-        }
-
-        displayNameCache.put(item, name);
-        return name;
+            return Component.translatable(i.getDescriptionId());
+        });
     }
 
     public static Item getRandomItem(Random random) {

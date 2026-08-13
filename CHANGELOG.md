@@ -1,3 +1,21 @@
+## v3.1.0
+
+A correctness and performance pass over multiplayer hunts and the client UI.
+
+### Fixed
+
+- Hunts no longer carry over between worlds — a hunt started in one singleplayer or LAN world stayed active in the next world opened, with the timer still running through the main menu
+- Creative and spectator players can no longer win a multiplayer hunt by taking the target item from the creative inventory
+- A hunt whose world creation never completed no longer attaches its timer to the next world or server joined
+- Shared item and hunt state is now safe to read from both the render thread and the server thread on integrated servers
+
+### Improved
+
+- Smoother item chooser — display names are resolved once instead of on every keystroke, and list rows no longer rebuild their item icon every frame
+- The HUD's "Best:" time is cached rather than re-read from disk state every frame
+- Servers do less work per tick and stop re-broadcasting an unchanging state after a hunt is won
+- Network payloads rebuilt on Minecraft's standard stream codecs (server and client must run matching versions, as before)
+
 ## v3.0.0
 
 26.1 support is here! Golden Dandelions watch out...
