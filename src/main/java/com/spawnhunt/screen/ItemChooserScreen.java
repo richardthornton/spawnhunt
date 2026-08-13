@@ -24,7 +24,10 @@ public class ItemChooserScreen extends Screen {
     private EditBox searchField;
     private ItemListWidget itemList;
     private Button selectButton;
-    private List<Item> sortedItems;
+    private List<Candidate> sortedItems;
+
+    /** Item paired with its lower-cased display name, resolved once so search doesn't re-do it per keystroke. */
+    private record Candidate(Item item, String lowerName) {}
 
     public ItemChooserScreen(Item currentItem, boolean hardcore) {
         super(Component.literal("Choose Item"));
@@ -34,9 +37,14 @@ public class ItemChooserScreen extends Screen {
 
     @Override
     protected void init() {
-        sortedItems = new ArrayList<>(ItemPool.getPool());
-        sortedItems.sort(Comparator.comparing(item ->
-                ItemPool.getDisplayName(item).getString().toLowerCase(Locale.ROOT)));
+        // Resolve display names once — they can't change while the screen is open
+        // (a language switch recreates the screen).
+        sortedItems = new ArrayList<>(ItemPool.getPool().size());
+        for (Item item : ItemPool.getPool()) {
+            sortedItems.add(new Candidate(item,
+                    ItemPool.getDisplayName(item).getString().toLowerCase(Locale.ROOT)));
+        }
+        sortedItems.sort(Comparator.comparing(Candidate::lowerName));
 
         searchField = new EditBox(this.getFont(), this.width / 2 - 100, 22, 200, 20, Component.literal("Search"));
         searchField.setResponder(text -> refreshList());
@@ -71,11 +79,10 @@ public class ItemChooserScreen extends Screen {
         itemList.clearEntries();
 
         ItemListWidget.Entry toSelect = null;
-        for (Item item : sortedItems) {
-            String name = ItemPool.getDisplayName(item).getString().toLowerCase(Locale.ROOT);
-            if (query.isEmpty() || name.contains(query)) {
-                ItemListWidget.Entry entry = itemList.addItem(item);
-                if (item == currentItem && toSelect == null) {
+        for (Candidate candidate : sortedItems) {
+            if (query.isEmpty() || candidate.lowerName().contains(query)) {
+                ItemListWidget.Entry entry = itemList.addItem(candidate.item());
+                if (candidate.item() == currentItem && toSelect == null) {
                     toSelect = entry;
                 }
             }
@@ -130,11 +137,13 @@ public class ItemChooserScreen extends Screen {
         class Entry extends ObjectSelectionList.Entry<Entry> {
             private final Item item;
             private final Component displayName;
+            private final ItemStack stack;
             private long lastClickTime;
 
             public Entry(Item item) {
                 this.item = item;
                 this.displayName = ItemPool.getDisplayName(item);
+                this.stack = new ItemStack(item);
             }
 
             public Item getItem() {
@@ -145,7 +154,7 @@ public class ItemChooserScreen extends Screen {
             public void extractContent(GuiGraphicsExtractor context, int mouseX, int mouseY, boolean hovered, float delta) {
                 int x = this.getContentX();
                 int y = this.getContentY();
-                context.item(new ItemStack(item), x + 2, y + 1);
+                context.item(stack, x + 2, y + 1);
                 context.text(Minecraft.getInstance().font, displayName,
                         x + 24, y + 5, 0xFFFFFFFF, true);
             }
