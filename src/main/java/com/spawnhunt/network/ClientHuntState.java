@@ -5,6 +5,9 @@ import net.minecraft.resources.Identifier;
 /**
  * Client-side mirror of the server's hunt state, updated via network packets.
  * Used by the HUD renderer when playing on a multiplayer server with SpawnHunt.
+ * <p>
+ * Client-thread-only: packet handlers hand off via {@code client.execute(...)}, so
+ * every write and read happens on the render thread. No synchronisation needed.
  */
 public class ClientHuntState {
     private static boolean active = false;

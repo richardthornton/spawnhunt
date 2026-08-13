@@ -5,15 +5,20 @@ import net.minecraft.resources.Identifier;
 /**
  * Singleton holding all runtime state for the current hunt.
  * Not persisted — exiting the world ends the hunt.
+ * <p>
+ * Written only from the client thread (screens, client tick). {@code active} and
+ * {@code won} are additionally read from the server thread by
+ * {@link com.spawnhunt.mixin.GameModeLockMixin} on the integrated server, so those
+ * two are volatile; the rest stay client-thread-only.
  */
 public class HuntState {
-    private static boolean active = false;
+    private static volatile boolean active = false;
     private static Identifier targetItem = null;
     private static long startTimeMs = 0;
     private static long accumulatedMs = 0;
     private static long lastTickTimeMs = 0;
     private static boolean paused = false;
-    private static boolean won = false;
+    private static volatile boolean won = false;
     private static long finalTimeMs = 0;
     private static boolean hardcore = true;
 
