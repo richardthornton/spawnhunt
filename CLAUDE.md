@@ -121,14 +121,14 @@ JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-25.0.2.10-hotspot" ./gradlew bu
 - [x] M4 Client integration (ClientHuntState, packet receivers, dual-source HUD)
 - [x] M5 Polish (seconds-only timer for MP, win timer fix, action bar cleanup)
 
-### Phase 26.2 — Port to Minecraft 26.2 "Chaos Cubed" (4.0.0)
+### Phase 26.2 — Port to Minecraft 26.2 "Chaos Cubed"
 - [x] P1 Toolchain bump (MC 26.2, loader 0.19.3, fabric-api 0.157.0+26.2, Loom 1.17.19, Gradle 9.5.1)
 - [x] P2 Build reliability (scoped Fabric repo, raised HTTP timeouts)
 - [x] P3 Gui/Hud split migration (`Minecraft.gui.setScreen`, `Minecraft.gui.screen()`)
 - [x] P4 Verify mixin targets and access widener still resolve against 26.2
 - [x] P5 Audit the 31 new items for survival obtainability (no exclusions needed)
 
-### Phase H — Hardening (3.1.0, from the July 2026 code review)
+### Phase H — Hardening (from the July 2026 code review)
 - [x] H1 Server state lifecycle (reset `ServerHuntState` + tick counter on `SERVER_STOPPED`)
 - [x] H2 Game-mode gate on multiplayer wins (survival/adventure only)
 - [x] H3 Thread safety for shared statics (concurrent name cache, volatile pool + `HuntState.active`/`won`)
@@ -175,23 +175,26 @@ JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-25.0.2.10-hotspot" ./gradlew bu
 - **Item pool accuracy** — maintain exclusion list carefully, log pool on startup, iterate via community feedback.
 - **Pre-world component binding** — `ensureComponentsBound()` binds minimal components before vanilla does. If vanilla changes the binding lifecycle or adds validation, this could break. Monitor across MC updates.
 
-## Versioning
+## Versioning & Release Process
 
-Uses [SemVer](https://semver.org/). Version is set in `gradle.properties` (`mod_version`).
+Uses [SemVer](https://semver.org/). **`CHANGELOG.md` is the version history — it is
+maintained by hand, and no automation writes to it. Don't add version tables here.**
 
-| Version | Date       | Notes                                    |
-|---------|------------|------------------------------------------|
-| 4.0.0 | 2026-08-13 | Port to MC 26.2: Gui/Hud split (`Minecraft.gui.setScreen`), Loom 1.17.19, Gradle 9.5.1, 31 new Chaos Cubed items in the pool |
-| 3.1.0 | 2026-08-13 | Server state lifecycle & game-mode fixes, thread safety, render/tick perf, composite payload codecs |
-| 3.0.0 | 2026-04-16 | Port to MC 26.1: Java 25, Mojang mappings, HudElementRegistry, unobfuscated build |
-| 2.2.1 | 2026-03-23 | Server players can immediately start a new hunt after winning |
-| 2.2.0 | 2026-03-22 | Slot machine rolling animation |
-| 2.1.0 | 2026-03-17 | Lock to survival during active singleplayer hunts |
-| 2.0.0 | 2026-03-16 | Multiplayer support: server commands, HUD sync, vanilla client action bar |
-| 1.3.0 | 2026-03-15 | HUD redesign, vertical menu layout, music disc naming, item pool fixes |
-| 1.2.0   | 2026-03-12 | Music disc song names, display name caching |
-| 1.1.0   | 2026-02-26 | UI polish, win state rework, world naming   |
-| 1.0.0   | 2026-02-26 | Initial public release on Modrinth          |
+`mod_version` in `gradle.properties` is the single source of truth for the version
+number: `build.gradle` reads it into `project.version`, and `processResources` expands
+it into `fabric.mod.json`'s `${version}`. Nothing else hardcodes a version.
+
+The release flow:
+
+1. Work lands on `dev`. You don't need to know the version number while working.
+2. When the work is complete, cut `release/X.Y.Z` from `dev`. The `Set Release Version`
+   workflow reads the version out of the branch name and commits the `mod_version` bump.
+3. Write the `CHANGELOG.md` entry by hand on the release branch.
+4. On approval, merge `release/X.Y.Z` into `main`. That builds the jar and publishes the
+   GitHub release, tagged `vX.Y.Z`, with notes taken from the top `CHANGELOG.md` section.
+5. Merge the release branch back into `dev` yourself — this is deliberately not automated.
+
+Only a merged `release/*` branch cuts a release; a `dev`/`hotfix` merge to `main` builds nothing.
 
 ## API Notes (MC 26.2)
 
