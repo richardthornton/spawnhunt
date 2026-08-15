@@ -7,13 +7,21 @@ on:
 
 jobs:
   release:
-    if: github.event.pull_request.merged == true
+    # Only a merged release/X.Y.Z branch cuts a release. A dev -> main or
+    # hotfix -> main merge builds nothing, so it can't re-cut a shipped version.
+    if: >-
+      github.event.pull_request.merged == true &&
+      startsWith(github.event.pull_request.head.ref, 'release/')
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          # Tags are needed for the duplicate-tag guard below. The default
+          # shallow checkout fetches none, which silently made that check a no-op.
+          fetch-depth: 0
 
       - name: Read version from gradle.properties
         id: version

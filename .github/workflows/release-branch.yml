@@ -23,24 +23,19 @@ jobs:
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
+      # mod_version is the single source of truth: build.gradle reads it into
+      # project.version, and processResources expands it into fabric.mod.json's
+      # ${version}. There is no other version number to keep in step.
       - name: Update mod_version in gradle.properties
         run: |
           sed -i "s/^mod_version=.*/mod_version=${{ steps.version.outputs.version }}/" gradle.properties
 
-      - name: Add version row to CLAUDE.md
-        run: |
-          DATE=$(date -u +%Y-%m-%d)
-          VERSION="${{ steps.version.outputs.version }}"
-          # Only insert if a row for this version doesn't already exist
-          if ! grep -q "| $VERSION |" CLAUDE.md; then
-            sed -i "/^|---------|------------|/a | $VERSION | $DATE |  |" CLAUDE.md
-          fi
-
+      # CHANGELOG.md is deliberately left alone — release notes are written by hand.
       - name: Commit version bump
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add gradle.properties CLAUDE.md
-          git diff --cached --quiet && echo "No changes to commit" && exit 0
+          git add gradle.properties
+          git diff --cached --quiet && echo "Version already ${{ steps.version.outputs.version }}, nothing to commit" && exit 0
           git commit -m "Set version to ${{ steps.version.outputs.version }}"
           git push
