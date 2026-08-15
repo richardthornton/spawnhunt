@@ -25,10 +25,17 @@ dependencies {
 }
 
 processResources {
+    // The Fabric API version we compile against is also the minimum we claim to run on,
+    // so fabric.mod.json takes its floor from gradle.properties rather than a hand-kept
+    // copy that drifts. Strip the build suffix (0.157.0+26.2 -> 0.157.0): the predicate
+    // wants a bare version, and semver ignores build metadata when comparing anyway.
+    def fabricApiMinimum = project.fabric_version.split('\\+')[0]
+
     inputs.property "version", project.version
+    inputs.property "fabric_api_minimum", fabricApiMinimum
 
     filesMatching("fabric.mod.json") {
-        expand "version": project.version
+        expand "version": project.version, "fabric_api_minimum": fabricApiMinimum
     }
 }
 
