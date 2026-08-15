@@ -31,7 +31,7 @@ public abstract class TitleScreenMixin extends Screen {
 
         this.addRenderableWidget(
                 Button.builder(Component.literal("SpawnHunt"), button -> {
-                    Minecraft.getInstance().setScreen(new SpawnHuntScreen());
+                    Minecraft.getInstance().gui.setScreen(new SpawnHuntScreen());
                 })
                 .bounds(this.width / 2 - 100, this.height / 4 + 156, 200, 20)
                 .build()

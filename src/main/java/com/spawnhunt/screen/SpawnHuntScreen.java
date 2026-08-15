@@ -115,7 +115,7 @@ public class SpawnHuntScreen extends Screen {
                 Button.builder(Component.literal("Start"), button -> {
                     HuntState.startHunt(BuiltInRegistries.ITEM.getKey(targetItem), this.hardcore);
                     CreateWorldScreen.openFresh(this.minecraft, () -> {
-                        this.minecraft.setScreen(new TitleScreen());
+                        this.minecraft.gui.setScreen(new TitleScreen());
                     });
                 })
                 .bounds(leftBtnX, btnBlockY, BTN_W, BTN_H)
@@ -136,7 +136,7 @@ public class SpawnHuntScreen extends Screen {
         int row2Y = btnBlockY + BTN_H + BTN_GAP;
         this.listButton = this.addRenderableWidget(
                 Button.builder(Component.literal("List"), button -> {
-                    this.minecraft.setScreen(new ItemChooserScreen(this.targetItem, this.hardcore));
+                    this.minecraft.gui.setScreen(new ItemChooserScreen(this.targetItem, this.hardcore));
                 })
                 .bounds(leftBtnX, row2Y, BTN_W, BTN_H)
                 .build()
@@ -144,7 +144,7 @@ public class SpawnHuntScreen extends Screen {
 
         this.addRenderableWidget(
                 Button.builder(Component.literal("Cancel"), button -> {
-                    this.minecraft.setScreen(new TitleScreen());
+                    this.minecraft.gui.setScreen(new TitleScreen());
                 })
                 .bounds(rightBtnX, row2Y, BTN_W, BTN_H)
                 .build()
