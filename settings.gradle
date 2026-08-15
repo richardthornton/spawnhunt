@@ -14,4 +14,27 @@ pluginManagement {
     }
 }
 
+// Loom 1.17 refuses to resolve on a JVM older than 21, and the mod compiles to release
+// 25, so Gradle itself has to run on JDK 25+. Checked here rather than in build.gradle
+// because settings is evaluated before the plugins block resolves Loom, and Gradle's own
+// failure ("This build uses a Java 17 JVM") never says *where* that JVM came from — while
+// org.gradle.java.home in ~/.gradle/gradle.properties silently outranks JAVA_HOME.
+// (This has to sit below pluginManagement: Gradle requires that block to come first.)
+if (!JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_25)) {
+    throw new GradleException("""
+        SpawnHunt needs Gradle running on JDK 25 or newer.
+        It is running on ${JavaVersion.current()} (${System.getProperty('java.home')}).
+
+        Gradle chooses its JVM in this order — the first one set wins:
+          1. -Dorg.gradle.java.home=<path> on the command line
+          2. org.gradle.java.home in ~/.gradle/gradle.properties   <-- outranks JAVA_HOME
+          3. JAVA_HOME, then the java on PATH
+
+        A per-user gradle.properties is the usual culprit. List installed JDKs with
+        `/usr/libexec/java_home -V` (macOS), then either fix that file or run:
+
+          ./gradlew build -Dorg.gradle.java.home=/path/to/jdk-25-or-newer
+    """.stripIndent())
+}
+
 rootProject.name = 'spawnhunt'

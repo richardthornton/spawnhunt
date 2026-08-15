@@ -6,8 +6,11 @@ Supports both singleplayer (client-side) and multiplayer (server-side commands +
 
 ## Testing Environment
 
-- **Minecraft instance (macOS):** `/Applications/MultiMC.app/Data/instances/SpawnHunt 26.2/.minecraft`
+- **Minecraft instance (macOS):** `/Applications/MultiMC.app/Data/instances/Family 26.2/.minecraft`
 - **Minecraft instance (Windows):** `C:\MultiMC\instances\SpawnHunt 26.2\.minecraft`
+- The instance's Fabric API must be **at least** `fabric_version` from `gradle.properties`;
+  `fabric.mod.json` declares that floor, so Fabric refuses to load with a clear message
+  instead of dying on a `NoSuchMethodError` mid-game.
 - Built `.jar` goes into the `mods/` folder of that instance
 - Requires Fabric Loader + Fabric API for MC 26.2
 
@@ -47,7 +50,9 @@ com.spawnhunt
 ## Tech Stack
 
 - **Build:** Gradle 9.5.1 + Fabric Loom 1.17.19 (`net.fabricmc.fabric-loom` — no-remap for unobfuscated MC)
-- **Java:** JDK 25 (Eclipse Adoptium 25.0.2+10) at `C:\Program Files\Eclipse Adoptium\jdk-25.0.2.10-hotspot`
+- **Java:** JDK 25 **or newer** — Gradle itself must run on it. Compilation pins `options.release = 25`,
+  so a newer JDK (26 etc.) is fine and no JDK 25 install is required. `settings.gradle` fails fast with
+  the fix if the JVM is too old.
 - **Dependencies:** fabric-loader 0.19.3, fabric-api 0.157.0+26.2
 - **Mappings:** None (MC 26.2 is unobfuscated — uses Mojang official names directly)
 - **Language:** Java
@@ -55,10 +60,21 @@ com.spawnhunt
 ## Build Commands
 
 ```bash
-# Build (must use JDK 25)
-JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-25.0.2.10-hotspot" ./gradlew build
+# Build (needs a JDK 25+; usually just works if JAVA_HOME already points at one)
+./gradlew build
 
 # Output jar: build/libs/spawnhunt-<version>.jar
+```
+
+**If the build reports the wrong Java version, `JAVA_HOME` is not the thing to fix.**
+Gradle takes its JVM from `-Dorg.gradle.java.home` first, then `org.gradle.java.home` in
+**`~/.gradle/gradle.properties`**, and only then `JAVA_HOME`. A per-user gradle.properties
+pinning an old JDK outranks the environment and is the usual cause — exporting `JAVA_HOME`
+has no effect against it. Either fix that file or override per-invocation:
+
+```bash
+/usr/libexec/java_home -V                       # list installed JDKs (macOS)
+./gradlew build -Dorg.gradle.java.home=/path/to/jdk-25-or-newer
 ```
 
 ## Development Phases & Progress
