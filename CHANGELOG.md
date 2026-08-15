@@ -1,3 +1,11 @@
+## v4.0.1
+
+26.2 support is here! Go hunt some sulfur...
+
+### Fixed
+
+- Stopped the SpawnHunt button overlapping the Options/Quit row
+
 ## v4.0.0
 
 26.2 support is here! Go hunt some sulfur...
