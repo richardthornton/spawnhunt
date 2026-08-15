@@ -1,15 +1,15 @@
 # SpawnHunt
 
-A Fabric mod for Minecraft Java Edition 26.1.
+A Fabric mod for Minecraft Java Edition 26.2.
 Speedrun-style scavenger hunt: find and collect a random survival-obtainable block as fast as possible.
 Supports both singleplayer (client-side) and multiplayer (server-side commands + HUD sync).
 
 ## Testing Environment
 
-- **Minecraft instance (macOS):** `/Applications/MultiMC.app/Data/instances/SpawnHunt 26.1/.minecraft`
-- **Minecraft instance (Windows):** `C:\MultiMC\instances\SpawnHunt 26.1\.minecraft`
+- **Minecraft instance (macOS):** `/Applications/MultiMC.app/Data/instances/SpawnHunt 26.2/.minecraft`
+- **Minecraft instance (Windows):** `C:\MultiMC\instances\SpawnHunt 26.2\.minecraft`
 - Built `.jar` goes into the `mods/` folder of that instance
-- Requires Fabric Loader + Fabric API for MC 26.1
+- Requires Fabric Loader + Fabric API for MC 26.2
 
 ## Project Structure
 
@@ -46,10 +46,10 @@ com.spawnhunt
 
 ## Tech Stack
 
-- **Build:** Gradle 9.4.0 + Fabric Loom 1.16.1 (`net.fabricmc.fabric-loom` — no-remap for unobfuscated MC)
+- **Build:** Gradle 9.5.1 + Fabric Loom 1.17.19 (`net.fabricmc.fabric-loom` — no-remap for unobfuscated MC)
 - **Java:** JDK 25 (Eclipse Adoptium 25.0.2+10) at `C:\Program Files\Eclipse Adoptium\jdk-25.0.2.10-hotspot`
-- **Dependencies:** fabric-loader 0.18.4, fabric-api 0.144.4+26.1
-- **Mappings:** None (MC 26.1 is unobfuscated — uses Mojang official names directly)
+- **Dependencies:** fabric-loader 0.19.3, fabric-api 0.157.0+26.2
+- **Mappings:** None (MC 26.2 is unobfuscated — uses Mojang official names directly)
 - **Language:** Java
 
 ## Build Commands
@@ -121,6 +121,13 @@ JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-25.0.2.10-hotspot" ./gradlew bu
 - [x] M4 Client integration (ClientHuntState, packet receivers, dual-source HUD)
 - [x] M5 Polish (seconds-only timer for MP, win timer fix, action bar cleanup)
 
+### Phase 26.2 — Port to Minecraft 26.2 "Chaos Cubed" (4.0.0)
+- [x] P1 Toolchain bump (MC 26.2, loader 0.19.3, fabric-api 0.157.0+26.2, Loom 1.17.19, Gradle 9.5.1)
+- [x] P2 Build reliability (scoped Fabric repo, raised HTTP timeouts)
+- [x] P3 Gui/Hud split migration (`Minecraft.gui.setScreen`, `Minecraft.gui.screen()`)
+- [x] P4 Verify mixin targets and access widener still resolve against 26.2
+- [x] P5 Audit the 31 new items for survival obtainability (no exclusions needed)
+
 ### Phase H — Hardening (3.1.0, from the July 2026 code review)
 - [x] H1 Server state lifecycle (reset `ServerHuntState` + tick counter on `SERVER_STOPPED`)
 - [x] H2 Game-mode gate on multiplayer wins (survival/adventure only)
@@ -159,7 +166,7 @@ JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-25.0.2.10-hotspot" ./gradlew bu
   anything not reset leaks into the next world.
 - **Vanilla client support** — players without the mod see action bar messages during active hunts and chat messages for start/stop/win events.
 - **Multiplayer commands** require OP level 2 (GAMEMASTERS); `/spawnhunt status` is available to all players.
-- **Pre-world item rendering** — MC 26.1 binds item components (including `ITEM_MODEL`) during world load, but the selection screen runs pre-world. `ItemPool.ensureComponentsBound()` binds a minimal `DataComponentMap` with `ITEM_MODEL` set to the item's registry ID so `ItemStack` creation and rendering works on the title screen. Vanilla overwrites with full data-driven components during world load.
+- **Pre-world item rendering** — MC 26.2 binds item components (including `ITEM_MODEL`) during world load, but the selection screen runs pre-world. `ItemPool.ensureComponentsBound()` binds a minimal `DataComponentMap` with `ITEM_MODEL` set to the item's registry ID so `ItemStack` creation and rendering works on the title screen. Vanilla overwrites with full data-driven components during world load.
 - **Display names** use `Component.translatable(item.getDescriptionId())` instead of `ItemStack.getHoverName()` to avoid creating ItemStacks for name resolution (safe pre-world).
 
 ## Key Risks
@@ -174,6 +181,7 @@ Uses [SemVer](https://semver.org/). Version is set in `gradle.properties` (`mod_
 
 | Version | Date       | Notes                                    |
 |---------|------------|------------------------------------------|
+| 4.0.0 | 2026-08-13 | Port to MC 26.2: Gui/Hud split (`Minecraft.gui.setScreen`), Loom 1.17.19, Gradle 9.5.1, 31 new Chaos Cubed items in the pool |
 | 3.1.0 | 2026-08-13 | Server state lifecycle & game-mode fixes, thread safety, render/tick perf, composite payload codecs |
 | 3.0.0 | 2026-04-16 | Port to MC 26.1: Java 25, Mojang mappings, HudElementRegistry, unobfuscated build |
 | 2.2.1 | 2026-03-23 | Server players can immediately start a new hunt after winning |
@@ -185,9 +193,28 @@ Uses [SemVer](https://semver.org/). Version is set in `gradle.properties` (`mod_
 | 1.1.0   | 2026-02-26 | UI polish, win state rework, world naming   |
 | 1.0.0   | 2026-02-26 | Initial public release on Modrinth          |
 
-## API Notes (MC 26.1)
+## API Notes (MC 26.2)
 
-- MC 26.1 is **unobfuscated** — uses Mojang official names, no Yarn/intermediary mappings
+Changes introduced by the 26.1 → 26.2 port:
+
+- `Gui` now owns the screen stack and the HUD. `Minecraft.setScreen(s)` → `Minecraft.gui.setScreen(s)`,
+  and the `Minecraft.screen` field → `Minecraft.gui.screen()`. `Minecraft.gui.hud` is the new
+  in-game HUD object (`net.minecraft.client.gui.Hud`), split out of `Gui`.
+- `GuiGraphicsExtractor`, `HudElementRegistry`, `Font.width`, and `context.text/item/fill` are
+  unchanged — the `Font.drawInBatch`/`PreparedText` rework in 26.2 sits below the extractor API,
+  so the HUD and screens needed no render changes.
+- `Item.builtInRegistryHolder()` is now **deprecated** (still present and functional). The pre-world
+  component binding in `ItemPool.ensureComponentsBound()` depends on it — this is the most likely
+  thing to break on the next MC update.
+- Mixin targets all survived: `TitleScreen.init`, `CreateWorldScreen.init`/`onCreate`/`getUiState`,
+  and `ServerPlayer.setGameMode(GameType)`.
+- The Fabric maven is slow enough to time out Gradle's 30s default mid-resolve; `gradle.properties`
+  raises the HTTP timeouts and `settings.gradle` scopes the Fabric repo to `net.fabricmc*` so
+  third-party artifacts (ASM etc.) resolve from Maven Central instead.
+
+Carried over from 26.1 (still current):
+
+- MC 26.2 is **unobfuscated** — uses Mojang official names, no Yarn/intermediary mappings
 - `GuiGraphicsExtractor` replaces old `DrawContext`/`GuiGraphics` — methods: `item()`, `text()`, `centeredText()`, `fill()`
 - Screen render method is `extractRenderState()`, list entry render is `extractContent()`
 - `HudRenderCallback` removed — use `HudElementRegistry.addLast(Identifier, HudElement)` instead
@@ -227,4 +254,4 @@ Uses [SemVer](https://semver.org/). Version is set in `gradle.properties` (`mod_
 ## Conventions
 
 - Keep mixin surface area minimal to reduce breakage on MC updates.
-- Target MC 26.1, use only stable Fabric API modules.
+- Target MC 26.2, use only stable Fabric API modules.

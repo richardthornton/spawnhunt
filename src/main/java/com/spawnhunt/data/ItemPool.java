@@ -99,14 +99,19 @@ public class ItemPool {
         return Collections.unmodifiableList(result);
     }
 
+    private static boolean componentsBound = false;
+
     /**
-     * MC 26.1: item components are data-driven and not bound until world load.
+     * Item components are data-driven and not bound until world load.
      * This binds a minimal component map (with ITEM_MODEL) so ItemStacks can be
      * created pre-world for the selection screen. Vanilla overwrites with full
      * data-driven components during world load.
+     *
+     * <p>{@code builtInRegistryHolder()} is deprecated as of MC 26.2 but still
+     * present and functional; there is no non-deprecated way to bind components
+     * pre-world. This is the most likely call site to break on the next MC update.
      */
-    private static boolean componentsBound = false;
-
+    @SuppressWarnings("deprecation")
     public static void ensureComponentsBound() {
         if (componentsBound) return;
         int bound = 0;
