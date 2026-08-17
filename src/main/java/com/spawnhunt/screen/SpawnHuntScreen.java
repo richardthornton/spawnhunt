@@ -73,6 +73,11 @@ public class SpawnHuntScreen extends Screen {
 
     // Clickable "History" / "Back" link bounds (set during render)
     private int historyLinkX, historyLinkY, historyLinkW, historyLinkH;
+    /** False when the link is dimmed (no runs to show) or hidden (mid-roll) — clicks are ignored. */
+    private boolean historyLinkActive;
+    // hasRuns() hits the result cache, but render() asks every frame, so memoise per item.
+    private Item cachedHistoryItem;
+    private boolean cachedHasHistory;
 
     public SpawnHuntScreen() {
         super(Component.literal("SpawnHunt"));
@@ -295,23 +300,42 @@ public class SpawnHuntScreen extends Screen {
 
         // History toggle link (hidden during rolling)
         if (!isRolling) {
+            // Most items have never been run, and a link onto two empty panels is a dead end.
+            // So it is dimmed and inert unless there is something behind it — except while the
+            // history is open, where the link is the only way back out.
+            boolean active = showHistory || hasHistory();
+
             Component linkText = Component.literal(showHistory ? "< Back" : "History >");
             int linkW = this.getFont().width(linkText);
             int linkX = centerX - linkW / 2;
-            boolean hovering = mouseX >= linkX && mouseX <= linkX + linkW
+            boolean hovering = active && mouseX >= linkX && mouseX <= linkX + linkW
                     && mouseY >= curY && mouseY <= curY + TEXT_H;
-            int linkColor = hovering ? 0xFF88CCFF : 0xFF6699CC;
+
+            int linkColor;
+            if (!active) {
+                linkColor = 0xFF667788;      // muted — keeps the link's hue, reads as unavailable
+            } else {
+                linkColor = hovering ? 0xFF88CCFF : 0xFF6699CC;
+            }
             context.text(this.getFont(), linkText, linkX, curY, linkColor, true);
 
             historyLinkX = linkX;
             historyLinkY = curY;
             historyLinkW = linkW;
             historyLinkH = TEXT_H;
+            historyLinkActive = active;
         } else {
-            // Clear link bounds so clicks don't register during rolling
-            historyLinkW = 0;
-            historyLinkH = 0;
+            historyLinkActive = false;
         }
+    }
+
+    /** Whether the current target has recorded runs, memoised against the item it was resolved for. */
+    private boolean hasHistory() {
+        if (targetItem != cachedHistoryItem) {
+            cachedHistoryItem = targetItem;
+            cachedHasHistory = ResultStore.hasRuns(BuiltInRegistries.ITEM.getKey(targetItem));
+        }
+        return cachedHasHistory;
     }
 
     private void renderHistoryArea(GuiGraphicsExtractor context, int centerX, int areaY) {
@@ -347,7 +371,10 @@ public class SpawnHuntScreen extends Screen {
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean selected) {
-        if (event.button() == 0 && event.x() >= historyLinkX && event.x() <= historyLinkX + historyLinkW
+        // historyLinkActive is the real gate — the bounds alone are not enough, since a
+        // zero-width "cleared" box still matches a click landing exactly on its corner.
+        if (historyLinkActive && event.button() == 0
+                && event.x() >= historyLinkX && event.x() <= historyLinkX + historyLinkW
                 && event.y() >= historyLinkY && event.y() <= historyLinkY + historyLinkH) {
             showHistory = !showHistory;
             return true;
