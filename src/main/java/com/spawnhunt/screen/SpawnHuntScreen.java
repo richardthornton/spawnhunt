@@ -4,6 +4,7 @@ import com.spawnhunt.data.HuntState;
 import com.spawnhunt.data.ItemPool;
 import com.spawnhunt.data.ResultStore;
 import net.minecraft.client.Minecraft;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
@@ -371,9 +372,14 @@ public class SpawnHuntScreen extends Screen {
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean selected) {
+        // MOUSE_BUTTON_LEFT is 1, not 0 — MC's mouse buttons are 1-based (LEFT 1, MIDDLE 2,
+        // RIGHT 3), unlike the GLFW codes the old Click API exposed. Hardcoding 0 here is what
+        // silently killed this link in the 26.1 port; vanilla's own isValidClickButton
+        // compares against MOUSE_BUTTON_LEFT, so use the constant rather than a literal.
+        //
         // historyLinkActive is the real gate — the bounds alone are not enough, since a
         // zero-width "cleared" box still matches a click landing exactly on its corner.
-        if (historyLinkActive && event.button() == 0
+        if (historyLinkActive && event.button() == InputConstants.MOUSE_BUTTON_LEFT
                 && event.x() >= historyLinkX && event.x() <= historyLinkX + historyLinkW
                 && event.y() >= historyLinkY && event.y() <= historyLinkY + historyLinkH) {
             showHistory = !showHistory;
