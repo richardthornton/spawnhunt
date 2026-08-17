@@ -1,3 +1,19 @@
+## v5.0.0
+
+This release brings SpawnHunt to Minecraft 26.3, growing the item pool from 1,409 to 1,530. Alongside the port, the item selection screen's History link is repaired: it has been unclickable since v3.0.0 due to a mouse-button renumbering missed during the 26.1 port.
+
+### Added
+
+- Support for Minecraft 26.3
+- 121 new 26.3 items in the hunt pool, taking it from 1,409 to 1,530 targets
+
+### Improved
+
+- The History link is now dimmed and inert on items with no recorded runs, instead of opening an empty "No runs yet" panel
+
+### Fixed
+- The History link never responding to left clicks
+
 ## v4.0.1
 
 26.2 support is here! Go hunt some sulfur...
