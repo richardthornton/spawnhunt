@@ -1,6 +1,6 @@
 package com.spawnhunt.data;
 
-import com.spawnhunt.SpawnHuntMod;
+import com.spawnhunt.SpawnHuntCommon;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.Item;
@@ -129,15 +129,15 @@ public class ItemPool {
                     // Defensive: if the component-binding API changes in a future MC patch,
                     // skip the offending item rather than crash the title screen.
                     failed++;
-                    SpawnHuntMod.LOGGER.warn("SpawnHunt: failed to pre-bind components for {}: {}", id, t.toString());
+                    SpawnHuntCommon.LOGGER.warn("SpawnHunt: failed to pre-bind components for {}: {}", id, t.toString());
                 }
             }
         }
         if (bound > 0) {
-            SpawnHuntMod.LOGGER.info("SpawnHunt: pre-bound model components for {} items (pre-world rendering)", bound);
+            SpawnHuntCommon.LOGGER.info("SpawnHunt: pre-bound model components for {} items (pre-world rendering)", bound);
         }
         if (failed > 0) {
-            SpawnHuntMod.LOGGER.warn("SpawnHunt: {} items failed component pre-binding", failed);
+            SpawnHuntCommon.LOGGER.warn("SpawnHunt: {} items failed component pre-binding", failed);
         }
         componentsBound = true;
     }
@@ -169,8 +169,8 @@ public class ItemPool {
     public static void logPool() {
         List<Item> p = getPool();
         for (Item item : p) {
-            SpawnHuntMod.LOGGER.debug("  pool: {}", BuiltInRegistries.ITEM.getKey(item));
+            SpawnHuntCommon.LOGGER.debug("  pool: {}", BuiltInRegistries.ITEM.getKey(item));
         }
-        SpawnHuntMod.LOGGER.info("Item pool initialized — {} survival-obtainable items", p.size());
+        SpawnHuntCommon.LOGGER.info("Item pool initialized — {} survival-obtainable items", p.size());
     }
 }

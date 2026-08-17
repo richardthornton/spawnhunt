@@ -346,6 +346,11 @@ public class SpawnHuntScreen extends Screen {
     }
 
     @Override
+    public void onClose() {
+        this.minecraft.gui.setScreen(new TitleScreen());
+    }
+
+    @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean selected) {
         if (event.button() == 0 && event.x() >= historyLinkX && event.x() <= historyLinkX + historyLinkW
                 && event.y() >= historyLinkY && event.y() <= historyLinkY + historyLinkH) {
