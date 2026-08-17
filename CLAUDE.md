@@ -1,18 +1,23 @@
 # SpawnHunt
 
-A Fabric mod for Minecraft Java Edition 26.2.
+A Fabric mod for Minecraft Java Edition 26.3.
 Speedrun-style scavenger hunt: find and collect a random survival-obtainable block as fast as possible.
 Supports both singleplayer (client-side) and multiplayer (server-side commands + HUD sync).
 
 ## Testing Environment
 
 - **Minecraft instance (macOS):** `/Applications/MultiMC.app/Data/instances/Family 26.2/.minecraft`
-- **Minecraft instance (Windows):** `C:\MultiMC\instances\SpawnHunt 26.2\.minecraft`
+  — still a 26.2 instance; a 26.3 one has to be created before the port can be playtested in-game.
+- **Minecraft instance (Windows):** `C:\MultiMC\instances\SpawnHunt 26.2\.minecraft` — same.
 - The instance's Fabric API must be **at least** `fabric_version` from `gradle.properties`;
   `fabric.mod.json` declares that floor, so Fabric refuses to load with a clear message
   instead of dying on a `NoSuchMethodError` mid-game.
 - Built `.jar` goes into the `mods/` folder of that instance
-- Requires Fabric Loader + Fabric API for MC 26.2
+- Requires Fabric Loader + Fabric API for MC 26.3
+- **No MultiMC instance needed for a smoke test:** `./gradlew runServer` boots a headless
+  dev server with the mod loaded (accept the EULA once in `run/eula.txt`). That exercises
+  the common entrypoint, `/spawnhunt`, the item pool against the real registry, and
+  `GameModeLockMixin` — everything except the client screens and HUD.
 
 ## Project Structure
 
@@ -53,8 +58,8 @@ com.spawnhunt
 - **Java:** JDK 25 **or newer** — Gradle itself must run on it. Compilation pins `options.release = 25`,
   so a newer JDK (26 etc.) is fine and no JDK 25 install is required. `settings.gradle` fails fast with
   the fix if the JVM is too old.
-- **Dependencies:** fabric-loader 0.19.3, fabric-api 0.157.0+26.2
-- **Mappings:** None (MC 26.2 is unobfuscated — uses Mojang official names directly)
+- **Dependencies:** fabric-loader 0.19.3, fabric-api 0.157.1+26.3
+- **Mappings:** None (MC 26.3 is unobfuscated — uses Mojang official names directly)
 - **Language:** Java
 
 ## Build Commands
@@ -144,6 +149,31 @@ has no effect against it. Either fix that file or override per-invocation:
 - [x] P4 Verify mixin targets and access widener still resolve against 26.2
 - [x] P5 Audit the 31 new items for survival obtainability (no exclusions needed)
 
+### Phase 26.3 — Port to Minecraft 26.3 "Dappled Forest"
+- [x] Q1 Toolchain bump (MC 26.3-snapshot-8, fabric-api 0.157.1+26.3; loader, Loom and Gradle unchanged)
+- [x] Q2 `fabric.mod.json` predicate `~26.3-` — the trailing hyphen is what makes it match
+      snapshot builds as well as the eventual 26.3 release (Fabric API declares its own the same way)
+- [x] Q3 Verify mixin targets and the access widener still resolve against 26.3 (all unchanged)
+- [x] Q4 Audit the 121 new items for survival obtainability (no exclusions needed — see below)
+- [x] Q5 Headless `runServer` smoke test on 26.3-snapshot-8
+
+**The 26.3 item audit.** 121 items added, none removed, so the pool goes 1409 → 1530.
+Every one is survival-obtainable, so `ItemPool.EXCLUDED` is untouched:
+
+- Poplar wood set, wool/concrete stairs and slabs, cushions, straw bed, boats — craftable.
+- Poplar logs/leaves/sapling, red shrub, shelf mushroom — block drops.
+- 16 new map items — this is the only interesting call. Explorer maps used to be `filled_map`
+  with components (hence the `filled_map` exclusion); in 26.3 they are their own registry
+  entries, so they enter the pool on their own IDs. All are reachable — abandoned-camp chest
+  loot, shipwreck/ruin loot, or cartographer trades — but some are *slow*: the village and
+  ocean/swamp explorer maps are trade-only, and `woodland_explorer_map` needs a Master-level
+  cartographer. Kept in, because the pool's rule is "survival-obtainable", and it already
+  contains comparably long targets (`nether_star`, `dragon_egg`, `elytra`).
+
+The audit is reproducible without launching the game: the item registry is exactly the set of
+`assets/minecraft/items/*.json` entries in the client jar, and `data/minecraft/{recipe,loot_table,
+villager_trade}` says how each one is obtained. Diff two client jars to get the delta.
+
 ### Phase H — Hardening (from the July 2026 code review)
 - [x] H1 Server state lifecycle (reset `ServerHuntState` + tick counter on `SERVER_STOPPED`)
 - [x] H2 Game-mode gate on multiplayer wins (survival/adventure only)
@@ -182,7 +212,7 @@ has no effect against it. Either fix that file or override per-invocation:
   anything not reset leaks into the next world.
 - **Vanilla client support** — players without the mod see action bar messages during active hunts and chat messages for start/stop/win events.
 - **Multiplayer commands** require OP level 2 (GAMEMASTERS); `/spawnhunt status` is available to all players.
-- **Pre-world item rendering** — MC 26.2 binds item components (including `ITEM_MODEL`) during world load, but the selection screen runs pre-world. `ItemPool.ensureComponentsBound()` binds a minimal `DataComponentMap` with `ITEM_MODEL` set to the item's registry ID so `ItemStack` creation and rendering works on the title screen. Vanilla overwrites with full data-driven components during world load.
+- **Pre-world item rendering** — MC 26.3 binds item components (including `ITEM_MODEL`) during world load, but the selection screen runs pre-world. `ItemPool.ensureComponentsBound()` binds a minimal `DataComponentMap` with `ITEM_MODEL` set to the item's registry ID so `ItemStack` creation and rendering works on the title screen. Vanilla overwrites with full data-driven components during world load.
 - **Display names** use `Component.translatable(item.getDescriptionId())` instead of `ItemStack.getHoverName()` to avoid creating ItemStacks for name resolution (safe pre-world).
 
 ## Key Risks
@@ -212,9 +242,28 @@ The release flow:
 
 Only a merged `release/*` branch cuts a release; a `dev`/`hotfix` merge to `main` builds nothing.
 
-## API Notes (MC 26.2)
+## API Notes (MC 26.3)
 
-Changes introduced by the 26.1 → 26.2 port:
+The 26.2 → 26.3 port needed **no source changes at all** — it is a version bump plus metadata.
+Worth recording, because "nothing moved" is itself the finding:
+
+- Every mixin and access-widener target is byte-identical in shape: `TitleScreen.init()`,
+  `CreateWorldScreen.init()`/`onCreate()`/`getUiState()`, and
+  `ServerPlayer.setGameMode(GameType)` still returning `boolean`.
+- The fragile pre-world path survived intact — `Item.builtInRegistryHolder()` (still deprecated,
+  still present), `Holder.Reference.bindComponents`/`areComponentsBound`, and
+  `DataComponents.ITEM_MODEL` typed as `DataComponentType<Identifier>`.
+- `WorldCreationUiState` kept `setName`/`getName`/`setGameMode`/`setDifficulty`/`setAllowCommands`
+  and the `SelectedGameMode.SURVIVAL`/`HARDCORE` constants.
+- Loom 1.17.19 and Gradle 9.5.1 handle 26.3 snapshots as-is; no toolchain bump was needed.
+
+Carried over from 26.2 (still current):
+
+- MC 26.3 is unobfuscated, same as 26.2 — no mappings.
+- `Gui` owns the screen stack and the HUD: `Minecraft.gui.setScreen(s)`, `Minecraft.gui.screen()`,
+  `Minecraft.gui.hud`.
+
+Changes introduced by the earlier 26.1 → 26.2 port:
 
 - `Gui` now owns the screen stack and the HUD. `Minecraft.setScreen(s)` → `Minecraft.gui.setScreen(s)`,
   and the `Minecraft.screen` field → `Minecraft.gui.screen()`. `Minecraft.gui.hud` is the new
@@ -273,4 +322,4 @@ Carried over from 26.1 (still current):
 ## Conventions
 
 - Keep mixin surface area minimal to reduce breakage on MC updates.
-- Target MC 26.2, use only stable Fabric API modules.
+- Target MC 26.3, use only stable Fabric API modules.

@@ -52,7 +52,11 @@ public class ItemPool {
             "petrified_oak_slab",
             "player_head",
 
-            // Variant-dependent (identity determined by components, not item ID)
+            // Variant-dependent (identity determined by components, not item ID).
+            // Note that as of 26.3 the explorer/village/structure maps are *not* in this
+            // bucket: they became real registry items (ocean_explorer_map, buried_treasure_map,
+            // abandoned_camp_map, …) rather than filled_map + components, so they carry their
+            // own identity and stay in the pool. Only the generic filled_map is excluded.
             "potion",
             "splash_potion",
             "lingering_potion",
@@ -107,7 +111,7 @@ public class ItemPool {
      * created pre-world for the selection screen. Vanilla overwrites with full
      * data-driven components during world load.
      *
-     * <p>{@code builtInRegistryHolder()} is deprecated as of MC 26.2 but still
+     * <p>{@code builtInRegistryHolder()} is deprecated as of MC 26.2 (still true in 26.3) but still
      * present and functional; there is no non-deprecated way to bind components
      * pre-world. This is the most likely call site to break on the next MC update.
      */
