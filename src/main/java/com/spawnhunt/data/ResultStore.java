@@ -82,6 +82,16 @@ public class ResultStore {
         save();
     }
 
+    /**
+     * Whether this item has any recorded runs. Deliberately avoids the copy-and-sort
+     * that {@link #getLastRuns} does — callers use this to decide whether to *offer*
+     * the history view, which is a question the render loop asks every frame.
+     */
+    public static boolean hasRuns(Identifier blockId) {
+        ensureLoaded();
+        return !cache.getOrDefault(blockId.toString(), Collections.emptyList()).isEmpty();
+    }
+
     public static List<RunResult> getLastRuns(Identifier blockId, int count) {
         ensureLoaded();
         List<RunResult> runs = cache.getOrDefault(blockId.toString(), Collections.emptyList());

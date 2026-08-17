@@ -22,21 +22,21 @@
 
 ## Features
 
-- **400+ target items** — every survival-obtainable item in the game
+- **1,500+ target items** — every survival-obtainable item in the game, including the 26.3 poplar wood set, cushions, wool/concrete stairs and slabs, and the new explorer maps
 - **Singleplayer** — built-in timer with pause awareness, run history, hardcore mode
 - **Multiplayer** — server commands, automatic inventory scanning, works with vanilla clients
 - **Zero setup** — singleplayer worlds created with a single click; multiplayer via one command
 
 ## Requirements
 
-- Minecraft Java Edition 1.21.11
-- [Fabric Loader](https://fabricmc.net/) 0.18.4+
-- [Fabric API](https://modrinth.com/mod/fabric-api) 0.141.3+
+- Minecraft Java Edition 26.3
+- [Fabric Loader](https://fabricmc.net/) 0.19.0+
+- [Fabric API](https://modrinth.com/mod/fabric-api) 0.157.1+
 
 ## Installation
 
 ### Client (singleplayer + enhanced multiplayer HUD)
-1. Install Fabric Loader and Fabric API for Minecraft 1.21.11
+1. Install Fabric Loader and Fabric API for Minecraft 26.3
 2. Drop the `spawnhunt` jar into your `mods` folder
 3. Launch the game — the **SpawnHunt** button appears on the title screen
 
