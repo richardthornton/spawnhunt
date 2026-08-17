@@ -4,6 +4,16 @@
 
 🌐 **[spawnhunt.com](https://spawnhunt.com)** · 💬 **[Discord](https://discord.gg/nU4Bv64)** · 📺 **[YouTube](https://youtube.com/@richardthornton)**
 
+---
+
+> ## 🎬 Streaming your runs? Get featured.
+>
+> Clipped a lucky first-chunk find, a brutal target, or a run that fell apart at the last second? **Clip it on Twitch and share it with [@richardthornton on X](https://x.com/richardthornton)** — the best ones get featured on the [SpawnHunt website](https://spawnhunt.com).
+>
+> [![Share your clip on X](https://img.shields.io/badge/Share%20your%20clip-%40richardthornton-000000?logo=x&logoColor=white)](https://x.com/richardthornton)
+
+---
+
 ## How It Works
 
 ### Singleplayer
@@ -75,6 +85,7 @@ Players **do not** need the mod installed to join in. They'll see the hunt via a
 [![Discord](https://img.shields.io/badge/Discord-Join%20Server-5865F2?logo=discord&logoColor=white)](https://discord.gg/nU4Bv64)
 [![YouTube](https://img.shields.io/badge/YouTube-%40richardthornton-FF0000?logo=youtube&logoColor=white)](https://youtube.com/@richardthornton)
 [![Twitch](https://img.shields.io/badge/Twitch-%40richardthornton-9146FF?logo=twitch&logoColor=white)](https://twitch.tv/richardthornton)
+[![X](https://img.shields.io/badge/X-%40richardthornton-000000?logo=x&logoColor=white)](https://x.com/richardthornton)
 [![Ko-fi](https://img.shields.io/badge/Ko--fi-Support-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/richardthornton)
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-Support-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/richardthornton)
 
