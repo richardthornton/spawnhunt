@@ -53,10 +53,12 @@ public class ItemPool {
             "player_head",
 
             // Variant-dependent (identity determined by components, not item ID).
-            // Note that as of 26.3 the explorer/village/structure maps are *not* in this
-            // bucket: they became real registry items (ocean_explorer_map, buried_treasure_map,
-            // abandoned_camp_map, …) rather than filled_map + components, so they carry their
-            // own identity and stay in the pool. Only the generic filled_map is excluded.
+            // Note that as of 26.3 the structure/village maps are *not* in this bucket:
+            // they became real registry items (ocean_monument_map, buried_treasure_map,
+            // abandoned_camp_map, …) rather than filled_map + components, so they carry
+            // their own identity and stay in the pool. Only the generic filled_map is
+            // excluded. (The 26.3 snapshots named five of these *_explorer_map; the release
+            // renamed them after the structure they point at — none were added or removed.)
             "potion",
             "splash_potion",
             "lingering_potion",
