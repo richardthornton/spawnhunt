@@ -6,9 +6,17 @@ Supports both singleplayer (client-side) and multiplayer (server-side commands +
 
 ## Testing Environment
 
-- **Minecraft instance (macOS):** `/Applications/MultiMC.app/Data/instances/Family 26.2/.minecraft`
-  — still a 26.2 instance; a 26.3 one has to be created before the port can be playtested in-game.
-- **Minecraft instance (Windows):** `C:\MultiMC\instances\SpawnHunt 26.2\.minecraft` — same.
+- **26.3 instance (Windows, PrismLauncher):**
+  `C:\Users\richa\AppData\Roaming\PrismLauncher\instances\26.3` — the current test instance
+  (MC 26.3, Fabric Loader 0.19.5, Java 25). **Prism puts the game directory at `minecraft/`,
+  not `.minecraft/`**, so mods go in `<instance>/minecraft/mods/`. Launch it from the CLI with
+  `prismlauncher.exe --launch 26.3` and read `minecraft/logs/latest.log`.
+- **26.2 instances (older, MultiMC):** `/Applications/MultiMC.app/Data/instances/Family 26.2/.minecraft`
+  (macOS) and `C:\MultiMC\instances\SpawnHunt 26.2\.minecraft` (Windows). Kept for 26.2 regression
+  checks; these are MultiMC, hence the `.minecraft` layout.
+- Fabric API is not bundled with the loader — drop the matching `fabric-api-<version>.jar` into
+  `mods/` alongside the SpawnHunt jar. It is the same artifact Modrinth serves, and
+  `https://maven.fabricmc.net/net/fabricmc/fabric-api/fabric-api/<version>/` has it.
 - The instance's Fabric API must be **at least** `fabric_version` from `gradle.properties`;
   `fabric.mod.json` declares that floor, so Fabric refuses to load with a clear message
   instead of dying on a `NoSuchMethodError` mid-game.
@@ -58,7 +66,7 @@ com.spawnhunt
 - **Java:** JDK 25 **or newer** — Gradle itself must run on it. Compilation pins `options.release = 25`,
   so a newer JDK (26 etc.) is fine and no JDK 25 install is required. `settings.gradle` fails fast with
   the fix if the JVM is too old.
-- **Dependencies:** fabric-loader 0.19.3, fabric-api 0.157.1+26.3
+- **Dependencies:** fabric-loader 0.19.5, fabric-api 0.160.7+26.3
 - **Mappings:** None (MC 26.3 is unobfuscated — uses Mojang official names directly)
 - **Language:** Java
 
@@ -150,25 +158,37 @@ has no effect against it. Either fix that file or override per-invocation:
 - [x] P5 Audit the 31 new items for survival obtainability (no exclusions needed)
 
 ### Phase 26.3 — Port to Minecraft 26.3 "Dappled Forest"
-- [x] Q1 Toolchain bump (MC 26.3-snapshot-8, fabric-api 0.157.1+26.3; loader, Loom and Gradle unchanged)
+- [x] Q1 Toolchain bump (MC 26.3 release, fabric-loader 0.19.5, fabric-api 0.160.7+26.3;
+      Loom and Gradle unchanged). The port was developed against 26.3-snapshot-8 and
+      finished against the release; no source change was needed for either step.
 - [x] Q2 `fabric.mod.json` predicate `~26.3-` — the trailing hyphen is what makes it match
-      snapshot builds as well as the eventual 26.3 release (Fabric API declares its own the same way)
+      snapshot builds as well as the 26.3 release (Fabric API declares its own the same way)
 - [x] Q3 Verify mixin targets and the access widener still resolve against 26.3 (all unchanged)
 - [x] Q4 Audit the 121 new items for survival obtainability (no exclusions needed — see below)
-- [x] Q5 Headless `runServer` smoke test on 26.3-snapshot-8
+- [x] Q5 Headless `runServer` smoke test on the 26.3 release
+- [x] Q6 Re-run the audit against the release — five map IDs were renamed after snapshot-8
+      (see below); nothing else in the registry moved between snapshot-8 and release.
 
-**The 26.3 item audit.** 121 items added, none removed, so the pool goes 1409 → 1530.
+**The 26.3 item audit.** 121 items added since 26.2, none removed, so the pool goes 1409 → 1530.
 Every one is survival-obtainable, so `ItemPool.EXCLUDED` is untouched:
 
 - Poplar wood set, wool/concrete stairs and slabs, cushions, straw bed, boats — craftable.
 - Poplar logs/leaves/sapling, red shrub, shelf mushroom — block drops.
-- 16 new map items — this is the only interesting call. Explorer maps used to be `filled_map`
+- 16 new map items — this is the only interesting call. Structure maps used to be `filled_map`
   with components (hence the `filled_map` exclusion); in 26.3 they are their own registry
   entries, so they enter the pool on their own IDs. All are reachable — abandoned-camp chest
-  loot, shipwreck/ruin loot, or cartographer trades — but some are *slow*: the village and
-  ocean/swamp explorer maps are trade-only, and `woodland_explorer_map` needs a Master-level
-  cartographer. Kept in, because the pool's rule is "survival-obtainable", and it already
-  contains comparably long targets (`nether_star`, `dragon_egg`, `elytra`).
+  loot, shipwreck/ruin loot, or cartographer trades — but some are *slow*: the five village
+  maps plus `ocean_monument_map` and `swamp_hut_map` are cartographer-trade-only, and
+  `woodland_mansion_map`'s trade needs a Master-level cartographer (it also drops from an
+  abandoned-camp secret chest). Kept in, because the pool's rule is "survival-obtainable",
+  and it already contains comparably long targets (`nether_star`, `dragon_egg`, `elytra`).
+- **The release renamed five of those maps** away from the snapshot's `*_explorer_map` scheme,
+  to names matching the structure they point at: `jungle_explorer_map` → `jungle_pyramid_map`,
+  `ocean_explorer_map` → `ocean_monument_map`, `swamp_explorer_map` → `swamp_hut_map`,
+  `trial_explorer_map` → `buried_trial_chambers_map`, `woodland_explorer_map` →
+  `woodland_mansion_map`. Nothing depends on the old IDs — the pool is built by iterating the
+  registry, and `EXCLUDED` never listed them — so this was a documentation fix only. It is
+  worth remembering that snapshot IDs are not stable: re-diff at release, not just at snapshot.
 
 The audit is reproducible without launching the game: the item registry is exactly the set of
 `assets/minecraft/items/*.json` entries in the client jar, and `data/minecraft/{recipe,loot_table,

@@ -22,7 +22,7 @@
 
 ## Features
 
-- **1,500+ target items** — every survival-obtainable item in the game, including the 26.3 poplar wood set, cushions, wool/concrete stairs and slabs, and the new explorer maps
+- **1,500+ target items** — every survival-obtainable item in the game, including the 26.3 poplar wood set, cushions, wool/concrete stairs and slabs, and the new structure maps
 - **Singleplayer** — built-in timer with pause awareness, run history, hardcore mode
 - **Multiplayer** — server commands, automatic inventory scanning, works with vanilla clients
 - **Zero setup** — singleplayer worlds created with a single click; multiplayer via one command
@@ -31,7 +31,7 @@
 
 - Minecraft Java Edition 26.3
 - [Fabric Loader](https://fabricmc.net/) 0.19.0+
-- [Fabric API](https://modrinth.com/mod/fabric-api) 0.157.1+
+- [Fabric API](https://modrinth.com/mod/fabric-api) 0.160.7+
 
 ## Installation
 

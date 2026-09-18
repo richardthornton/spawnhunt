@@ -43,7 +43,7 @@
 
 - Minecraft Java Edition **26.3**
 - [Fabric Loader](https://fabricmc.net/) **0.19.0+**
-- [Fabric API](https://modrinth.com/mod/fabric-api) **0.157.1+**
+- [Fabric API](https://modrinth.com/mod/fabric-api) **0.160.7+**
 - Java **25+**
 
 ## Installation
