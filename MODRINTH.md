@@ -14,6 +14,12 @@
 
 ---
 
+## Now on Minecraft 26.3 "Dappled Forest"
+
+SpawnHunt is built against the **26.3 release**, and the hunt pool has grown from 1,409 to **1,530 targets**. All 121 new 26.3 items are in — the poplar wood set, wool and concrete stairs and slabs, cushions, the straw bed, red shrubs, shelf mushrooms, and the 16 new structure maps, which are now real items instead of map components.
+
+Fair warning on those maps: a few of them (the village maps, `ocean_monument_map`, `swamp_hut_map`) are cartographer-trade-only, and `woodland_mansion_map` needs a Master-level cartographer. They're survival-obtainable, so they're in the pool — but they're a long run.
+
 ## How It Works
 
 ### Singleplayer
@@ -22,7 +28,7 @@
 2. You're shown a random target item — **Reroll** for a new one, or pick from the full **List**
 3. Choose whether to play **Hardcore** (on by default), hit **Start**, and a new world is created for you
 4. Find and collect the target item
-5. Your time is tracked, and your best runs are saved per item
+5. Your time is tracked, and your best runs and recent history are saved per item
 
 ### Multiplayer
 
@@ -34,17 +40,30 @@
 
 ## Features
 
-- **1,500+ target items** — every survival-obtainable item in the game, randomly selected each run, including everything new in 26.3
-- **Singleplayer** — built-in timer with pause awareness, saved run history and best times, Hardcore mode
+- **1,530 target items** — every survival-obtainable item in the game, randomly selected each run, including everything new in 26.3
+- **Singleplayer** — built-in timer with pause awareness, saved run history and best times per item, Hardcore mode
 - **Multiplayer** — server commands, automatic inventory scanning, works with vanilla clients
 - **Zero setup** — one click to start a singleplayer hunt, one command to start a multiplayer one. No config files.
 
 ## Requirements
 
 - Minecraft Java Edition **26.3**
-- [Fabric Loader](https://fabricmc.net/) **0.19.0+**
-- [Fabric API](https://modrinth.com/mod/fabric-api) **0.160.7+**
+- [Fabric Loader](https://fabricmc.net/) **0.19.0+** (built and tested against 0.19.5)
+- [Fabric API](https://modrinth.com/mod/fabric-api) **0.160.7+26.3** or newer
 - Java **25+**
+
+Fabric API is a separate download — if you're upgrading from an earlier 26.3 build, update it too, or SpawnHunt will refuse to load.
+
+## Minecraft Version Support
+
+| Minecraft | SpawnHunt |
+|-----------|-----------|
+| 26.3 | 5.x |
+| 26.2 | 4.x |
+| 26.1 | 3.x |
+| 1.21.11 | 2.x |
+
+Older versions stay available on the Versions tab; they're no longer updated.
 
 ## Installation
 

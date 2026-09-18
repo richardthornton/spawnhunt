@@ -8,9 +8,9 @@
 
 1. Click **SpawnHunt** on the title screen
 2. You're shown a random target item — **Reroll** for a new one, or pick from the full **List**
-3. Hit **Start** and a new Survival world is created automatically
+3. Choose whether to play **Hardcore** (on by default), hit **Start**, and a new world is created for you
 4. Find and collect the target item as fast as possible
-5. Your time is tracked, and your best runs are saved per item
+5. Your time is tracked, and your best runs and recent history are saved per item
 
 ### Multiplayer
 
@@ -22,16 +22,28 @@
 
 ## Features
 
-- **1,500+ target items** — every survival-obtainable item in the game, including the 26.3 poplar wood set, cushions, wool/concrete stairs and slabs, and the new structure maps
-- **Singleplayer** — built-in timer with pause awareness, run history, hardcore mode
+- **1,530 target items** — every survival-obtainable item in the game, including the 26.3 poplar wood set, cushions, wool/concrete stairs and slabs, and the new structure maps
+- **Singleplayer** — built-in timer with pause awareness, saved run history and best times per item, hardcore mode
 - **Multiplayer** — server commands, automatic inventory scanning, works with vanilla clients
 - **Zero setup** — singleplayer worlds created with a single click; multiplayer via one command
 
 ## Requirements
 
 - Minecraft Java Edition 26.3
-- [Fabric Loader](https://fabricmc.net/) 0.19.0+
-- [Fabric API](https://modrinth.com/mod/fabric-api) 0.160.7+
+- [Fabric Loader](https://fabricmc.net/) 0.19.0+ (built and tested against 0.19.5)
+- [Fabric API](https://modrinth.com/mod/fabric-api) 0.160.7+26.3 or newer
+- Java 25+
+
+## Minecraft Version Support
+
+| Minecraft | SpawnHunt |
+|-----------|-----------|
+| 26.3 | 5.x |
+| 26.2 | 4.x |
+| 26.1 | 3.x |
+| 1.21.11 | 2.x |
+
+Older versions remain available on the [releases page](https://github.com/richardthornton/spawnhunt/releases); they are no longer updated.
 
 ## Installation
 
