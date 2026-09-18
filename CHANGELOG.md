@@ -1,3 +1,12 @@
+## v5.1.0
+
+SpawnHunt now runs on the final Minecraft 26.3 release rather than a snapshot build. The item pool is unchanged at 1,530 targets - every 26.3 item already shipped in v5.0.0 - so this is a compatibility and requirements update.
+
+### Improved
+
+- **Built against the Minecraft 26.3 release** - previously built against the 26.3-snapshot-8 pre-release. Verified end to end on the release: item pool, commands, the title screen and selection screen, world creation, the timer, and win detection.
+- **Updated Fabric requirements** - now built against Fabric Loader 0.19.5 and Fabric API 0.160.7+26.3. You will need to update Fabric API if you are on an older 26.3 build.
+
 ## v5.0.0
 
 This release brings SpawnHunt to Minecraft 26.3, growing the item pool from 1,409 to 1,530. Alongside the port, the item selection screen's History link is repaired: it has been unclickable since v3.0.0 due to a mouse-button renumbering missed during the 26.1 port.
@@ -71,19 +80,19 @@ This release prevents players from circumventing the hunt by switching game mode
 
 ## v2.0.0
 
-SpawnHunt now supports multiplayer — run hunts on any Fabric server with full HUD sync for mod clients and action bar fallback for vanilla players.
+SpawnHunt now supports multiplayer - run hunts on any Fabric server with full HUD sync for mod clients and action bar fallback for vanilla players.
 
 ### Added
 
-- Multiplayer support — server-authoritative hunts managed via /spawnhunt commands (start, stop, restart, status)
-- Server-to-client HUD sync — mod clients see the full SpawnHunt HUD (target item, timer) during multiplayer hunts
-- Vanilla client compatibility — players without the mod receive target and timer updates via the action bar, plus chat messages for start/stop/win events
-- Server-side win detection — inventory scanning and victory announcements are handled by the server
+- Multiplayer support - server-authoritative hunts managed via /spawnhunt commands (start, stop, restart, status)
+- Server-to-client HUD sync - mod clients see the full SpawnHunt HUD (target item, timer) during multiplayer hunts
+- Vanilla client compatibility - players without the mod receive target and timer updates via the action bar, plus chat messages for start/stop/win events
+- Server-side win detection - inventory scanning and victory announcements are handled by the server
 
 ### Improved
 
-- HUD rendering — updated to support both singleplayer and multiplayer state sources seamlessly
-- Hunt state cleanup — state resets properly on disconnect for both singleplayer and multiplayer sessions
+- HUD rendering - updated to support both singleplayer and multiplayer state sources seamlessly
+- Hunt state cleanup - state resets properly on disconnect for both singleplayer and multiplayer sessions
 
 ## v1.3.0
 
